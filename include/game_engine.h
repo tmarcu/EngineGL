@@ -17,15 +17,15 @@
 #include "model_loader.h"
 void ReadData(char *filename, int numPoints, Polygon *triangle);
 /* Game functions */
-int InitializeGame();
-int StartGame();
-void EndGame();
-void HandleCycle();
+bool InitializeGame(void);
+bool StartGame(void);
+void EndGame(void);
+void HandleCycle(void);
 void HandleKeyPress(SDL_keysym *keysym);
 void HandleKeyPressCamera(SDL_keysym *keysym, Camera *camera);
 void MouseButtonUp(int x, int y, int button);
 void MouseButtonDown(int x, int y, int button);
-void RenderGame();
+void RenderGame(void);
 
 class GameEngine
 {
@@ -39,7 +39,7 @@ public:
 	static GameEngine *GetEngine() { return game_engine;};
 
 	int get_videoflags() { return videoflags_;};
-	void set_videoflags(int videoflags);
+	void set_videoflags(const int videoflags);
 
 	SDL_Surface *get_surface() { return surface_;};
 	void set_surface(SDL_Surface *surface);
@@ -49,17 +49,17 @@ public:
 	Camera *get_camera() { return camera_;};
 	ModelLoader *get_mode() { return model_;};
 
-	int SetupSDL(int sdl_hardware,	/* Change to use hardware or software mode */
+	int SetupSDL(bool sdl_hardware,	/* Change to use hardware or software mode */
 				int screen_width, 
 				int screen_height,
 				int screen_bpp,
 				char *title, char *icon);
-	int InitializeGL();		/* Set up all of the openGL needed */
-	void QuitProgram();		/* Free appropriate memory */
-	void Render();			/* Render the scene after all drawing done */
+	int InitializeGL(void);		/* Set up all of the openGL needed */
+	void QuitProgram(void);		/* Free appropriate memory */
+	void Render(void);			/* Render the scene after all drawing done */
 	void HandleEvent(SDL_Event event);  /* Handle incoming events */
-	void HandleKeystate();		/* Handle multiple keypresses */
-	void CameraLook();		/* Equivalent of gluLookAt*/
+	void HandleKeystate(void);		/* Handle multiple keypresses */
+	void CameraLook(void);		/* Equivalent of gluLookAt*/
 	void ResizeWindow(int width, int height);
 
 private:

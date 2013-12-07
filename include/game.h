@@ -9,4 +9,4 @@
 
 GameEngine *g_game;
 
-void ReadData(char *filename, int numPoints, Polygon *triangle);
+void ReadData(const char *filename, int numPoints, Polygon *triangle);

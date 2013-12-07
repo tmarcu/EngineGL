@@ -9,12 +9,6 @@
 
 GameEngine *GameEngine::game_engine = NULL;
 
-FILE *file;
-char filename[] = "ch.obj_new";
-int numVertices;
-Polygon *triangle;
-Vector3D *points;
-
 /* What we use to initialize the camera */
 Vector3D GameEngine::camera_position_ = {0.0f, 0.0f, 1.0f};
 Vector3D GameEngine::camera_center_ = {0.0f, 0.0f, 1.0f};
@@ -29,20 +23,15 @@ GameEngine::GameEngine(int screen_width, int screen_height, int screen_bpp)
 	screen_bpp_ = screen_bpp;
 }
 
-GameEngine::~GameEngine()
+GameEngine::~GameEngine(void)
 {
 	SDL_Quit();
 }
 
 /* Load our model and set up the main GL parameters */
-int GameEngine::InitializeGL()
+int GameEngine::InitializeGL(void)
 {
 	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.1f);
-	model_ = new ModelLoader();
-	model_->countVertices(file, filename);
-	numVertices = model_->get_vertices();
-	triangle = new Polygon[numVertices/3];
-	ReadData(filename, numVertices, triangle);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
@@ -57,8 +46,8 @@ int GameEngine::InitializeGL()
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
 
-	/*glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK); */
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
 
 
 	/* Gives us pretty calculations for perspective */
@@ -68,18 +57,14 @@ int GameEngine::InitializeGL()
 }
 
 /* Release all memory and handles to program before destroying it */
-void GameEngine::QuitProgram()
+void GameEngine::QuitProgram(void)
 {
-	if (points != NULL)
-		free(points);
 	if (keystate_ != NULL)
 		delete keystate_;
 	if (surface_ != NULL)
 		delete surface_;
 	if (camera_ != NULL)	
 		delete(camera_);
-	if (triangle != NULL)
-		delete[] triangle;
 }
 
 /* function to reset our viewport after a window resize */
@@ -89,14 +74,15 @@ void GameEngine::ResizeWindow(int width, int height)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	/* Calculate The Aspect Ratio And Set The Clipping Volume */
-	if (height == 0) height = 1;
+	if (height == 0)
+		height = 1;
 	gluPerspective(45.0f, (float)width/(float)height, 0.1, 100.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
 
 /* Set gluLookAt dynamically to what the camera coordinates/vectors are */
-void GameEngine::CameraLook()
+void GameEngine::CameraLook(void)
 {
 	gluLookAt(camera_->GetCameraPosition().x,camera_->GetCameraPosition().y,
 		  camera_->GetCameraPosition().z,
@@ -122,7 +108,7 @@ void GameEngine::HandleKeystate(void)
 }
 
 /* Drawing code */
-void GameEngine::Render()
+void GameEngine::Render(void)
 {
 	/* Clear The Screen And The Depth Buffer*/
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -136,7 +122,6 @@ void GameEngine::Render()
 	RenderGame();
 	glPushMatrix();	/* Push matrix stack */
 	glTranslatef(3.0f, 0.0f, 5.0f);	/* Begin 3 right, 0 up, 5 back (towards screen) */
-	glBegin( GL_TRIANGLES );               /* Draw A Quad                      */
 	glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
 	glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
 	glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Front)       */
@@ -167,23 +152,12 @@ void GameEngine::Render()
 	glVertex3f( -1.0f, -1.0f,  1.0f ); /* Right Of Triangle (Left)      */
 	glEnd( );  
 	glPopMatrix(); /* Pop matrix stack */
-	glPushMatrix();
-	// glScalef(2.0f, 2.0f, 2.0f);
-	glBegin(GL_POINTS);
-	int vNum;
-	for(vNum = 0; vNum < numVertices/3; vNum++) {
-		for(int i = 0; i < 3; i++)
-			glVertex3f(triangle[vNum].vertex[i].x,
-			triangle[vNum].vertex[i].y, triangle[vNum].vertex[i].z);
-	}
-	glEnd();
-	glPopMatrix();
 
 	/* Actually draw everything to the screen */
 	SDL_GL_SwapBuffers();
 }
 
-void GameEngine::set_videoflags(int videoflags)
+void GameEngine::set_videoflags(const int videoflags)
 {
 	GameEngine::GetEngine()->videoflags_ = videoflags;
 }
@@ -193,17 +167,19 @@ void GameEngine::set_surface(SDL_Surface *surface)
 	GameEngine::GetEngine()->surface_ = surface;
 }
 
-int GameEngine::SetupSDL(int sdl_hardware, int screen_width, int screen_height, int screen_bpp, char *title, char *icon)
+int GameEngine::SetupSDL(bool sdl_hardware, int screen_width, int screen_height, int screen_bpp, char *title, char *icon)
 {
 	int videoflags;
 	int surface_type;
 	int accel_type;
+
 	if (sdl_hardware) {
 		surface_type = SDL_HWSURFACE;
 		accel_type = SDL_HWACCEL;
 	} else {
 		surface_type = SDL_SWSURFACE;
 	}
+
 	/* Initialize SDL */
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
@@ -237,11 +213,13 @@ int GameEngine::SetupSDL(int sdl_hardware, int screen_width, int screen_height, 
 
 	/* Set window title and icon name */
 	SDL_WM_SetCaption(title,icon);
+
 	/* Control window position */
-	putenv(strdup("SDL_VIDEO_CENTERED=1")); 
+	putenv((char *) "SDL_VIDEO_CENTERED=1"); 
 
 	/* Get new SDL surface initialized */
 	surface_ = SDL_SetVideoMode(screen_width, screen_height, screen_bpp, videoflags);
+
 	/* Check if surface was created successfully */
 	if (!surface_) {
 		fprintf(stderr, "Video mode set failed: %s\n", SDL_GetError());
@@ -308,13 +286,13 @@ int main(int argc, char *argv[])
 	int isActive = 1;
 
 	/* Only run the program if we successfully create the game engine */
-	if (!InitializeGame()) {
+	if (InitializeGame()) {
 		if (GameEngine::GetEngine()->InitializeGL()) {
 			fprintf(stderr, "Could not initialize OpenGL");
 			GameEngine::GetEngine()->QuitProgram();
 		}
 
-		if (GameEngine::GetEngine()->SetupSDL(1, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, "tits","sdl.ico")) {
+		if (GameEngine::GetEngine()->SetupSDL(true, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, (char *) "SDLPROG", (char *) "sdl.ico")) {
 			fprintf(stderr, "Could not setup our SDL environment: %s\n", SDL_GetError());
 			GameEngine::GetEngine()->QuitProgram();
 		}

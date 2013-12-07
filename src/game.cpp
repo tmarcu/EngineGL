@@ -6,18 +6,18 @@
 #include "game.h"
 
 /* Create a GameEngine object that will run the program */
-int InitializeGame()
+bool InitializeGame()
 {
 	g_game = new GameEngine(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP);
 	if (g_game == 0)
-		return -1;
+		return false;
 
-	return 0;
+	return true;
 }
 
-int StartGame()
+bool StartGame()
 {
-	return 0;
+	return true;
 }
 
 void MouseButtonUp(int x, int y, int button) {};
