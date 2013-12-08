@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 //#include <SDL_OpenGL.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -15,14 +15,15 @@
 #include "structs.h"
 #include "camera.h"
 #include "model_loader.h"
+
 void ReadData(char *filename, int numPoints, Polygon *triangle);
 /* Game functions */
 bool InitializeGame(void);
 bool StartGame(void);
 void EndGame(void);
 void HandleCycle(void);
-void HandleKeyPress(SDL_keysym *keysym);
-void HandleKeyPressCamera(SDL_keysym *keysym, Camera *camera);
+void HandleKeyPress(SDL_Keysym *keysym);
+void HandleKeyPressCamera(SDL_Keysym *keysym, Camera *camera);
 void MouseButtonUp(int x, int y, int button);
 void MouseButtonDown(int x, int y, int button);
 void RenderGame(void);
@@ -38,25 +39,15 @@ public:
 	/* Game engine methods */
 	static GameEngine *GetEngine() { return game_engine;};
 
-	int get_videoflags() { return videoflags_;};
-	void set_videoflags(const int videoflags);
-
-	SDL_Surface *get_surface() { return surface_;};
-	void set_surface(SDL_Surface *surface);
-
-	const SDL_VideoInfo *get_kvideoinfo() { return kvideoinfo_;};
-
+	SDL_Window *GetWindow(void) { return window_;};
+	void SetGLContext(SDL_GLContext *context);
 	Camera *get_camera() { return camera_;};
 	ModelLoader *get_mode() { return model_;};
 
-	int SetupSDL(bool sdl_hardware,	/* Change to use hardware or software mode */
-				int screen_width, 
-				int screen_height,
-				int screen_bpp,
-				char *title, char *icon);
+	bool SetupSDL(const int screen_width, const int screen_height);
 	int InitializeGL(void);		/* Set up all of the openGL needed */
 	void QuitProgram(void);		/* Free appropriate memory */
-	void Render(void);			/* Render the scene after all drawing done */
+	void Render(SDL_Window *window);			/* Render the scene after all drawing done */
 	void HandleEvent(SDL_Event event);  /* Handle incoming events */
 	void HandleKeystate(void);		/* Handle multiple keypresses */
 	void CameraLook(void);		/* Equivalent of gluLookAt*/
@@ -66,9 +57,9 @@ private:
 	int screen_width_;
 	int screen_height_;
 	int screen_bpp_;
-	Uint8 *keystate_;
-	const SDL_VideoInfo *kvideoinfo_;
-	SDL_Surface *surface_;
+	const Uint8 *keystate_;
+	SDL_Window *window_;
+	SDL_GLContext *glcontext_;
 	Camera *camera_;
 	ModelLoader *model_;
 

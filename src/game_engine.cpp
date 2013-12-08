@@ -3,6 +3,8 @@
  * Copyright (C) 2013 Tudor Marcu. All rights reserved.
  */
 
+#include <iostream>
+
 #include "game_engine.h"
 
 #define DEBUG 1  /* Used for enabling verbose output to test program */
@@ -61,10 +63,10 @@ void GameEngine::QuitProgram(void)
 {
 	if (keystate_ != NULL)
 		delete keystate_;
-	if (surface_ != NULL)
-		delete surface_;
 	if (camera_ != NULL)	
 		delete(camera_);
+	SDL_DestroyWindow(window_);
+	SDL_GL_DeleteContext(glcontext_);
 }
 
 /* function to reset our viewport after a window resize */
@@ -76,7 +78,7 @@ void GameEngine::ResizeWindow(int width, int height)
 	/* Calculate The Aspect Ratio And Set The Clipping Volume */
 	if (height == 0)
 		height = 1;
-	gluPerspective(45.0f, (float)width/(float)height, 0.1, 100.0);
+	gluPerspective(45.0f, (float)width/height, 0.1, 100.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -84,7 +86,8 @@ void GameEngine::ResizeWindow(int width, int height)
 /* Set gluLookAt dynamically to what the camera coordinates/vectors are */
 void GameEngine::CameraLook(void)
 {
-	gluLookAt(camera_->GetCameraPosition().x,camera_->GetCameraPosition().y,
+	gluLookAt(camera_->GetCameraPosition().x,
+		  camera_->GetCameraPosition().y,
 		  camera_->GetCameraPosition().z,
 		  camera_->GetCameraPosition().x + camera_->GetCameraCenter().x, 
 		  camera_->GetCameraPosition().y + camera_->GetCameraCenter().y, 
@@ -95,7 +98,7 @@ void GameEngine::CameraLook(void)
 /* Handle the keystates so that we can do multiple keypresses */
 void GameEngine::HandleKeystate(void)
 {
-	keystate_ = SDL_GetKeyState(0);
+	keystate_ = SDL_GetKeyboardState(NULL);
 
 	if(keystate_[SDLK_w])
 		camera_->MoveCamera(UP);
@@ -108,7 +111,7 @@ void GameEngine::HandleKeystate(void)
 }
 
 /* Drawing code */
-void GameEngine::Render(void)
+void GameEngine::Render(SDL_Window *window)
 {
 	/* Clear The Screen And The Depth Buffer*/
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -150,109 +153,44 @@ void GameEngine::Render(void)
 	glVertex3f( -1.0f, -1.0f, -1.0f ); /* Left Of Triangle (Left)       */
 	glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
 	glVertex3f( -1.0f, -1.0f,  1.0f ); /* Right Of Triangle (Left)      */
-	glEnd( );  
+	glEnd();  
 	glPopMatrix(); /* Pop matrix stack */
 
 	/* Actually draw everything to the screen */
-	SDL_GL_SwapBuffers();
+	SDL_GL_SwapWindow(window);
 }
 
-void GameEngine::set_videoflags(const int videoflags)
+bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 {
-	GameEngine::GetEngine()->videoflags_ = videoflags;
-}
-
-void GameEngine::set_surface(SDL_Surface *surface)
-{
-	GameEngine::GetEngine()->surface_ = surface;
-}
-
-int GameEngine::SetupSDL(bool sdl_hardware, int screen_width, int screen_height, int screen_bpp, char *title, char *icon)
-{
-	int videoflags;
-	int surface_type;
-	int accel_type;
-
-	if (sdl_hardware) {
-		surface_type = SDL_HWSURFACE;
-		accel_type = SDL_HWACCEL;
-	} else {
-		surface_type = SDL_SWSURFACE;
-	}
-
 	/* Initialize SDL */
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
-		return -1;
+		return false;
 	}
 
-	/* Get video info */
-	kvideoinfo_ = SDL_GetVideoInfo();
-
-	if (!GameEngine::GetEngine()->get_kvideoinfo()) {
-		fprintf(stderr, "Could not get video info: %s\n", SDL_GetError());
-		return -1;
+	window_ = SDL_CreateWindow("SDLPROG", SDL_WINDOWPOS_CENTERED,
+					SDL_WINDOWPOS_CENTERED,
+					screen_width, screen_height,
+					SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+	if (window_ == NULL) {
+		std::cerr << "Failed to create window!" << SDL_GetError() << std::endl;
+		return false;
 	}
 
-	/* Set up appropriate optoins for video */
-	videoflags  = SDL_OPENGL;          /* Enable OpenGL in SDL */
-	videoflags |= SDL_GL_DOUBLEBUFFER; /* Enable double buffering */
-	videoflags |= SDL_HWPALETTE;       /* Store the palette in hardware */
-	videoflags |= SDL_RESIZABLE;       /* Enable window resizing */
+	SDL_GLContext glcontext = SDL_GL_CreateContext(window_);
 
-	/* Store the surface in memory using hardware */
-	videoflags |= surface_type;
-
-	/* Use hardware acceleration for drawing. 
-	* Should check if it's supported first and switch to software if not */
-	videoflags |= accel_type;
-
-	GameEngine::set_videoflags(videoflags);
-	/* Double buffering for smoother rendering */
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	/* Set window title and icon name */
-	SDL_WM_SetCaption(title,icon);
-
-	/* Control window position */
-	putenv((char *) "SDL_VIDEO_CENTERED=1"); 
-
-	/* Get new SDL surface initialized */
-	surface_ = SDL_SetVideoMode(screen_width, screen_height, screen_bpp, videoflags);
-
-	/* Check if surface was created successfully */
-	if (!surface_) {
-		fprintf(stderr, "Video mode set failed: %s\n", SDL_GetError());
-		return -1;
-	}
-	return 0;
-
+	return true;
 }
 
 /* Mainly handle window events */
 void GameEngine::HandleEvent(SDL_Event event)
 {
 	switch(event.type) {
-	case SDL_ACTIVEEVENT:
-		/* this is in case we lose focus on the screen, 
-		* and want to save the work only for when we are 
-
-		* actually using the program. */
-
-		/*if ( event.active.gain == 0 )
-		isActive = 0;
-		else
-
-		isActive = 1;*/
-		break;
-	case SDL_VIDEORESIZE:
-		surface_ = SDL_SetVideoMode(event.resize.w, event.resize.h,32,
-				     GameEngine::GetEngine()->get_videoflags());
-		if (!surface_) {
-			fprintf(stderr, "Could not get a new surface after last resize: %s\n", SDL_GetError());
-			GameEngine::GetEngine()->QuitProgram();
-		}
-		ResizeWindow(event.resize.w, event.resize.h);
+	case SDL_WINDOWEVENT_SIZE_CHANGED:
+		std::cout << "OMG WINDOW RESIZE" << std::endl;
+		ResizeWindow(event.window.data1, event.window.data2);
 		break;
 	case SDL_KEYDOWN:
 		HandleKeyPress(&event.key.keysym);
@@ -282,8 +220,9 @@ void GameEngine::HandleEvent(SDL_Event event)
 int main(int argc, char *argv[])
 {
 	SDL_Event event;
-	int done = 0;
-	int isActive = 1;
+	SDL_Window *window = NULL;
+	bool done = false;
+	bool isActive = true;
 
 	/* Only run the program if we successfully create the game engine */
 	if (InitializeGame()) {
@@ -292,16 +231,25 @@ int main(int argc, char *argv[])
 			GameEngine::GetEngine()->QuitProgram();
 		}
 
-		if (GameEngine::GetEngine()->SetupSDL(true, SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, (char *) "SDLPROG", (char *) "sdl.ico")) {
-			fprintf(stderr, "Could not setup our SDL environment: %s\n", SDL_GetError());
-			GameEngine::GetEngine()->QuitProgram();
+
+		/* Initialize SDL */
+		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+			fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
+			return -1;
 		}
+
+		if (GameEngine::GetEngine()->SetupSDL(640, 480) != true) {
+			return -1;
+		}
+
+		window = GameEngine::GetEngine()->GetWindow();
 
 		/* Enable or disable for real FPS view */
 		SDL_ShowCursor(SDL_DISABLE);
 
 		/* Resize our initial window */
 		GameEngine::GetEngine()->ResizeWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+			SDL_SetRelativeMouseMode(SDL_TRUE);
 
 		/* Start event loop to handle program now */
 		while (!done) {
@@ -310,14 +258,14 @@ int main(int argc, char *argv[])
 				GameEngine::GetEngine()->HandleEvent(event);
 			}
 
-			SDL_WarpMouse(HALF_WIDTH, HALF_HEIGHT);
-
 			/* this makes sure the camera will still have speed when it reaches the minimum  */
-			if(GameEngine::GetEngine()->get_camera()->GetMoveSpeed() <= 0.05f) GameEngine::GetEngine()->get_camera()->SetMoveSpeed(0.05f);
-				GameEngine::GetEngine()->HandleKeystate(); 
+			if(GameEngine::GetEngine()->get_camera()->GetMoveSpeed() <= 0.05f)
+				GameEngine::GetEngine()->get_camera()->SetMoveSpeed(0.05f);
+
+			GameEngine::GetEngine()->HandleKeystate(); 
 			/* Draw scene */
 			if (isActive) {
-				GameEngine::GetEngine()->Render(); // draw our scene
+				GameEngine::GetEngine()->Render(window); // draw our scene
 			}
 		}
 	}

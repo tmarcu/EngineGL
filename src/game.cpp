@@ -50,7 +50,7 @@ void ReadData(char *file, int numPoints, Polygon *triangle) {
 }
 
 /* function to handle key press events */
-void HandleKeyPress(SDL_keysym *keysym)
+void HandleKeyPress(SDL_Keysym *keysym)
 {
 	switch (keysym->sym) {
 	case SDLK_ESCAPE:
