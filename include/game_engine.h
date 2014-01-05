@@ -41,11 +41,11 @@ public:
 
 	SDL_Window *GetWindow(void) { return window_;};
 	void SetGLContext(SDL_GLContext *context);
-	Camera *get_camera() { return camera_;};
+	Camera *GetCamera() { return camera_;};
 	ModelLoader *get_mode() { return model_;};
 
 	bool SetupSDL(const int screen_width, const int screen_height);
-	int InitializeGL(void);		/* Set up all of the openGL needed */
+	bool InitializeGL(void);		/* Set up all of the openGL needed */
 	void QuitProgram(void);		/* Free appropriate memory */
 	void Render(SDL_Window *window);			/* Render the scene after all drawing done */
 	void HandleEvent(SDL_Event event);  /* Handle incoming events */

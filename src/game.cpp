@@ -61,15 +61,15 @@ void HandleKeyPress(SDL_Keysym *keysym)
 		//g_game->set_surface(SDL_SetVideoMode(1280, 800, SCREEN_BPP, SDL_FULLSCREEN));
 		break;
 	case SDLK_RIGHTBRACKET: /* Increase camera speed */
-		g_game->get_camera()->SetLookSpeed(0.05f);
+		g_game->GetCamera()->SetLookSpeed(0.05f);
 		break;
 	case SDLK_LEFTBRACKET: /* Decrease camera speed only if it is greater than the minimum */
-		if (g_game->get_camera()->GetLookSpeed() >= 0.05f)
-			g_game->get_camera()->SetLookSpeed(g_game->get_camera()->GetLookSpeed()- 0.01f);
+		if (g_game->GetCamera()->GetLookSpeed() >= 0.05f)
+			g_game->GetCamera()->SetLookSpeed(g_game->GetCamera()->GetLookSpeed()- 0.01f);
 		break;
 	case SDLK_F2:
-		g_game->get_camera()->SetCameraPosition(0.0f, 0.0f, 1.0f);
-		g_game->get_camera()->SetCameraCenter(0.0f, 0.0f, -1.0f);
+		g_game->GetCamera()->SetCameraPosition(0.0f, 0.0f, 1.0f);
+		g_game->GetCamera()->SetCameraCenter(0.0f, 0.0f, -1.0f);
 		break;
 	default:
 		break;

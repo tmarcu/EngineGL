@@ -11,11 +11,6 @@
 
 GameEngine *GameEngine::game_engine = NULL;
 
-/* What we use to initialize the camera */
-Vector3D GameEngine::camera_position_ = {0.0f, 0.0f, 1.0f};
-Vector3D GameEngine::camera_center_ = {0.0f, 0.0f, 1.0f};
-Vector3D GameEngine::camera_up_ = {0.0f, 1.0f, 0.0f};
-
 /* Constructors and destructors */
 GameEngine::GameEngine(int screen_width, int screen_height, int screen_bpp)
 {
@@ -31,8 +26,13 @@ GameEngine::~GameEngine(void)
 }
 
 /* Load our model and set up the main GL parameters */
-int GameEngine::InitializeGL(void)
+bool GameEngine::InitializeGL(void)
 {
+	/* What we use to initialize the camera */
+	Vector3D camera_position_ = {0.0f, 0.0f, 1.0f};
+	Vector3D camera_center_ = {0.0f, 0.0f, 1.0f};
+	Vector3D camera_up_ = {0.0f, 1.0f, 0.0f};
+
 	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.1f);
 
 	/* Enable smooth shading in our program */
@@ -55,18 +55,17 @@ int GameEngine::InitializeGL(void)
 	/* Gives us pretty calculations for perspective */
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-	return 0;
+	return true;
 }
 
 /* Release all memory and handles to program before destroying it */
 void GameEngine::QuitProgram(void)
 {
-	if (keystate_ != NULL)
-		delete keystate_;
 	if (camera_ != NULL)	
 		delete(camera_);
-	SDL_DestroyWindow(window_);
 	SDL_GL_DeleteContext(glcontext_);
+
+	SDL_DestroyWindow(window_);
 }
 
 /* function to reset our viewport after a window resize */
@@ -100,13 +99,13 @@ void GameEngine::HandleKeystate(void)
 {
 	keystate_ = SDL_GetKeyboardState(NULL);
 
-	if(keystate_[SDLK_w])
+	if(keystate_[SDL_SCANCODE_W])
 		camera_->MoveCamera(UP);
-	if(keystate_[SDLK_s])
+	if(keystate_[SDL_SCANCODE_S])
 		camera_->MoveCamera(DOWN);
-	if(keystate_[SDLK_a])
+	if(keystate_[SDL_SCANCODE_A])
 		camera_->MoveCamera(LEFT);
-	if(keystate_[SDLK_d])
+	if(keystate_[SDL_SCANCODE_D])
 		camera_->MoveCamera(RIGHT);
 }
 
@@ -189,13 +188,13 @@ void GameEngine::HandleEvent(SDL_Event event)
 {
 	switch(event.type) {
 	case SDL_WINDOWEVENT_SIZE_CHANGED:
-		std::cout << "OMG WINDOW RESIZE" << std::endl;
+		std::cout << "WINDOW RESIZE" << std::endl;
 		ResizeWindow(event.window.data1, event.window.data2);
 		break;
 	case SDL_KEYDOWN:
 		HandleKeyPress(&event.key.keysym);
 		break;
-		case SDL_MOUSEBUTTONUP:
+	case SDL_MOUSEBUTTONUP:
 		MouseButtonUp(event.button.x, event.button.y, event.button.button);
 		break;
 	case SDL_MOUSEBUTTONDOWN:
@@ -226,19 +225,20 @@ int main(int argc, char *argv[])
 
 	/* Only run the program if we successfully create the game engine */
 	if (InitializeGame()) {
-		if (GameEngine::GetEngine()->InitializeGL()) {
-			fprintf(stderr, "Could not initialize OpenGL");
+		if (GameEngine::GetEngine()->InitializeGL() == false) {
+			std::cerr << "Could not initialize OpenGL" << std::endl;
 			GameEngine::GetEngine()->QuitProgram();
 		}
 
 
 		/* Initialize SDL */
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-			fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
+			std::cerr << "Video initialization failed: %s\n" << SDL_GetError() << std::endl;;
 			return -1;
 		}
 
-		if (GameEngine::GetEngine()->SetupSDL(640, 480) != true) {
+		if (GameEngine::GetEngine()->SetupSDL(1024, 768) != true) {
+			std::cerr << "SDL initialization failed: %s\n" << SDL_GetError() << std::endl;;
 			return -1;
 		}
 
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 
 		/* Resize our initial window */
 		GameEngine::GetEngine()->ResizeWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
-			SDL_SetRelativeMouseMode(SDL_TRUE);
+		//SDL_SetRelativeMouseMode(SDL_TRUE); /* This is broken. Why */
 
 		/* Start event loop to handle program now */
 		while (!done) {
@@ -259,10 +259,11 @@ int main(int argc, char *argv[])
 			}
 
 			/* this makes sure the camera will still have speed when it reaches the minimum  */
-			if(GameEngine::GetEngine()->get_camera()->GetMoveSpeed() <= 0.05f)
-				GameEngine::GetEngine()->get_camera()->SetMoveSpeed(0.05f);
+			if(GameEngine::GetEngine()->GetCamera()->GetMoveSpeed() <= 0.05f)
+				GameEngine::GetEngine()->GetCamera()->SetMoveSpeed(0.05f);
 
-			GameEngine::GetEngine()->HandleKeystate(); 
+			GameEngine::GetEngine()->HandleKeystate();
+			SDL_WarpMouseInWindow(window, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
 			/* Draw scene */
 			if (isActive) {
 				GameEngine::GetEngine()->Render(window); // draw our scene
