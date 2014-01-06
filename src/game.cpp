@@ -82,4 +82,3 @@ void EndGame()
 {
 	delete g_game;
 }
-

@@ -178,4 +178,3 @@ void Camera::MouseMoved(int x, int y, int mwidth, int mheight)
 
 	RotateCamera(center, rotationAboutY, axis.x, axis.y, axis.z);
 }
-

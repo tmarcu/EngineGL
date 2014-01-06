@@ -21,4 +21,3 @@ struct Polygon {
 };
 
 #endif
-
