@@ -59,7 +59,7 @@ private:
 	int screen_bpp_;
 	const Uint8 *keystate_;
 	SDL_Window *window_;
-	SDL_GLContext *glcontext_;
+	SDL_GLContext glcontext_;
 	Camera *camera_;
 	ModelLoader *model_;
 

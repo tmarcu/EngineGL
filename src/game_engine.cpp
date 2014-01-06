@@ -47,9 +47,10 @@ bool GameEngine::InitializeGL(void)
 
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
+	glDepthRange(0,1);
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 
 
 	/* Gives us pretty calculations for perspective */
@@ -122,39 +123,44 @@ void GameEngine::Render(SDL_Window *window)
 
 	/* Draw whatever is specified for the program */
 	RenderGame();
-	glPushMatrix();	/* Push matrix stack */
 	glTranslatef(3.0f, 0.0f, 5.0f);	/* Begin 3 right, 0 up, 5 back (towards screen) */
-	glBegin( GL_TRIANGLES );             /* Drawing Using Triangles       */
-	glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-	glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Front)       */
-	glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-	glVertex3f( -1.0f, -1.0f,  1.0f ); /* Left Of Triangle (Front)      */
-	glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-	glVertex3f(  1.0f, -1.0f,  1.0f ); /* Right Of Triangle (Front)     */
 
-	glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-	glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Right)       */
-	glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-	glVertex3f(  1.0f, -1.0f,  1.0f ); /* Left Of Triangle (Right)      */
-	glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-	glVertex3f(  1.0f, -1.0f, -1.0f ); /* Right Of Triangle (Right)     */
+	glBegin(GL_TRIANGLES);           // Begin drawing the pyramid with 4 triangles
 
-	glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-	glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Back)        */
-	glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-	glVertex3f(  1.0f, -1.0f, -1.0f ); /* Left Of Triangle (Back)       */
-	glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-	glVertex3f( -1.0f, -1.0f, -1.0f ); /* Right Of Triangle (Back)      */
+	// Front
+	glColor3f(1.0f, 0.0f, 0.0f);     // Red
+	glVertex3f( 0.0f, 1.0f, 0.0f);
+	glColor3f(0.0f, 1.0f, 0.0f);     // Green
+	glVertex3f(-1.0f, -1.0f, 1.0f);
+	glColor3f(0.0f, 0.0f, 1.0f);     // Blue
+	glVertex3f(1.0f, -1.0f, 1.0f);
 
-	glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
-	glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Left)        */
-	glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
-	glVertex3f( -1.0f, -1.0f, -1.0f ); /* Left Of Triangle (Left)       */
-	glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
-	glVertex3f( -1.0f, -1.0f,  1.0f ); /* Right Of Triangle (Left)      */
-	glEnd();  
-	glPopMatrix(); /* Pop matrix stack */
+	// Right
+	glColor3f(1.0f, 0.0f, 0.0f);     // Red
+	glVertex3f(0.0f, 1.0f, 0.0f);
+	glColor3f(0.0f, 0.0f, 1.0f);     // Blue
+	glVertex3f(1.0f, -1.0f, 1.0f);
+	glColor3f(0.0f, 1.0f, 0.0f);     // Green
+	glVertex3f(1.0f, -1.0f, -1.0f);
 
+	// Back
+	glColor3f(1.0f, 0.0f, 0.0f);     // Red
+	glVertex3f(0.0f, 1.0f, 0.0f);
+	glColor3f(0.0f, 1.0f, 0.0f);     // Green
+	glVertex3f(1.0f, -1.0f, -1.0f);
+	glColor3f(0.0f, 0.0f, 1.0f);     // Blue
+	glVertex3f(-1.0f, -1.0f, -1.0f);
+
+	// Left
+	glColor3f(1.0f,0.0f,0.0f);       // Red
+	glVertex3f( 0.0f, 1.0f, 0.0f);
+	glColor3f(0.0f,0.0f,1.0f);       // Blue
+	glVertex3f(-1.0f,-1.0f,-1.0f);
+	glColor3f(0.0f,1.0f,0.0f);       // Green
+	glVertex3f(-1.0f,-1.0f, 1.0f);
+
+	glEnd();   // Done drawing the pyramid
+ 
 	/* Actually draw everything to the screen */
 	SDL_GL_SwapWindow(window);
 }
@@ -163,7 +169,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 {
 	/* Initialize SDL */
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		fprintf(stderr, "Video initialization failed: %s\n", SDL_GetError());
+		std::cerr << "Video initialization failed: %s\n" << SDL_GetError() << std::endl;
 		return false;
 	}
 
@@ -176,7 +182,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 		return false;
 	}
 
-	SDL_GLContext glcontext = SDL_GL_CreateContext(window_);
+	glcontext_ = SDL_GL_CreateContext(window_);
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
@@ -188,7 +194,7 @@ void GameEngine::HandleEvent(SDL_Event event)
 {
 	switch(event.type) {
 	case SDL_WINDOWEVENT_SIZE_CHANGED:
-		std::cout << "WINDOW RESIZE" << std::endl;
+		std::cerr << "WINDOW RESIZE" << std::endl;
 		ResizeWindow(event.window.data1, event.window.data2);
 		break;
 	case SDL_KEYDOWN:
@@ -201,12 +207,8 @@ void GameEngine::HandleEvent(SDL_Event event)
 		MouseButtonDown(event.button.x, event.button.y, event.button.button);
 		break;
 	case SDL_MOUSEMOTION:
-		/* Fix: Never stored the relative values, which base the camera
-		* movement off of the displacement. Without this, WarpMouse will
-		* add/subtract the amount the mouse moves to the camera.
-		*/
 		camera_->SetPrevPosition(event.motion.xrel, event.motion.yrel);
-		camera_->MouseMoved(event.motion.x, event.motion.y, HALF_WIDTH, HALF_HEIGHT);
+		camera_->MouseMoved(event.motion.x, event.motion.y, SCREEN_HALF_WIDTH, SCREEN_HALF_HEIGHT);
 		break;
 	case SDL_QUIT:
 		GameEngine::GetEngine()->QuitProgram();
@@ -242,6 +244,9 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 
+		/* InitializeGL does not preserve this */
+		glEnable(GL_DEPTH_TEST);
+
 		window = GameEngine::GetEngine()->GetWindow();
 
 		/* Enable or disable for real FPS view */
@@ -263,7 +268,7 @@ int main(int argc, char *argv[])
 				GameEngine::GetEngine()->GetCamera()->SetMoveSpeed(0.05f);
 
 			GameEngine::GetEngine()->HandleKeystate();
-			SDL_WarpMouseInWindow(window, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+			SDL_WarpMouseInWindow(window, SCREEN_HALF_WIDTH, SCREEN_HALF_HEIGHT);
 			/* Draw scene */
 			if (isActive) {
 				GameEngine::GetEngine()->Render(window); // draw our scene
