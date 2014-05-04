@@ -27,28 +27,6 @@ void RenderGame()
 {
 }
 
-/* Read in the model data from an .obj file and store it */
-void ReadData(char *file, int numPoints, Polygon *triangle) {
-	FILE *mFile;
-	mFile = fopen(file, "r");
-	char d;
-	int vNum;
-
-	/* Iterate through the file
-	 Scan for 3 points to make 1 Polygon */
-	for(vNum = 0; vNum < numPoints/3; vNum++) {
-		// Read 3 points before incrementing Polygons
-		for(int i = 0; i < 3; i++) {
-			fscanf(mFile, "%c\n%f\n%f\n%f\n", &d, &triangle[vNum].vertex[i].x, &triangle[vNum].vertex[i].y, &triangle[vNum].vertex[i].z);
-		}/*
-		for(int i = 0; i < 3; i++) {
-			printf("%f\n%f\n%f\n",  triangle[vNum].vertex[i].x, triangle[vNum].vertex[i].y, triangle[vNum].vertex[i].z);
-		}*/
-	}
-
-	fclose(mFile);
-}
-
 /* function to handle key press events */
 void HandleKeyPress(SDL_Keysym *keysym)
 {

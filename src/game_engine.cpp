@@ -47,14 +47,26 @@ bool GameEngine::InitializeGL(void)
 
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
-	glDepthRange(0,1);
 
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
+	
+	GLfloat const light_pos[4]     = {-1.00,  1.00,  1.00, 0.0};
+	GLfloat const light_color[4]   = { 0.85,  0.90,  0.70, 1.0};
+	GLfloat const light_ambient[4] = { 0.10,  0.10,  0.30, 1.0};
+	glLightfv(GL_LIGHT0, GL_POSITION, light_pos),
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
 
+	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHTING);
 
+	glEnable(GL_DEPTH_TEST);
+	
 	/* Gives us pretty calculations for perspective */
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	return true;
 }
@@ -124,42 +136,25 @@ void GameEngine::Render(SDL_Window *window)
 	/* Draw whatever is specified for the program */
 	RenderGame();
 	glTranslatef(3.0f, 0.0f, 5.0f);	/* Begin 3 right, 0 up, 5 back (towards screen) */
+glBegin(GL_QUADS);
 
-	glBegin(GL_TRIANGLES);           // Begin drawing the pyramid with 4 triangles
+glNormal3f(0.181636,-0.25,0.951057);
 
-	// Front
-	glColor3f(1.0f, 0.0f, 0.0f);     // Red
-	glVertex3f( 0.0f, 1.0f, 0.0f);
-	glColor3f(0.0f, 1.0f, 0.0f);     // Green
-	glVertex3f(-1.0f, -1.0f, 1.0f);
-	glColor3f(0.0f, 0.0f, 1.0f);     // Blue
-	glVertex3f(1.0f, -1.0f, 1.0f);
+glVertex3f(0.549,-0.756,0.261);
 
-	// Right
-	glColor3f(1.0f, 0.0f, 0.0f);     // Red
-	glVertex3f(0.0f, 1.0f, 0.0f);
-	glColor3f(0.0f, 0.0f, 1.0f);     // Blue
-	glVertex3f(1.0f, -1.0f, 1.0f);
-	glColor3f(0.0f, 1.0f, 0.0f);     // Green
-	glVertex3f(1.0f, -1.0f, -1.0f);
+glNormal3f(0.095492,-0.29389,0.95106);
 
-	// Back
-	glColor3f(1.0f, 0.0f, 0.0f);     // Red
-	glVertex3f(0.0f, 1.0f, 0.0f);
-	glColor3f(0.0f, 1.0f, 0.0f);     // Green
-	glVertex3f(1.0f, -1.0f, -1.0f);
-	glColor3f(0.0f, 0.0f, 1.0f);     // Blue
-	glVertex3f(-1.0f, -1.0f, -1.0f);
+glVertex3f(0.288,-0.889,0.261);
 
-	// Left
-	glColor3f(1.0f,0.0f,0.0f);       // Red
-	glVertex3f( 0.0f, 1.0f, 0.0f);
-	glColor3f(0.0f,0.0f,1.0f);       // Blue
-	glVertex3f(-1.0f,-1.0f,-1.0f);
-	glColor3f(0.0f,1.0f,0.0f);       // Green
-	glVertex3f(-1.0f,-1.0f, 1.0f);
+glNormal3f(0.18164,-0.55902,0.80902);
 
-	glEnd();   // Done drawing the pyramid
+glVertex3f(0.312,-0.962,0.222);
+
+glNormal3f(0.34549,-0.47553,0.80902);
+
+glVertex3f(0.594,-0.818,0.222);
+
+glEnd();
  
 	/* Actually draw everything to the screen */
 	SDL_GL_SwapWindow(window);
