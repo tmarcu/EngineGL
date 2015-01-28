@@ -10,4 +10,7 @@
 # Compiled Static libraries
 *.lai
 *.la
-*.a
+.a
+
+load
+Makefile
