@@ -12,5 +12,7 @@
 *.la
 .a
 
+sdlprog
 load
 Makefile
+*.obj
