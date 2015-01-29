@@ -49,6 +49,19 @@ bool GameEngine::InitializeGL(void)
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
 
+   GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+   GLfloat mat_shininess[] = { 50.0 };
+   GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+   glClearColor (0.0, 0.0, 0.0, 0.0);
+   glShadeModel (GL_SMOOTH);
+
+   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+   glEnable(GL_LIGHTING);
+   glEnable(GL_LIGHT0);
+   glEnable(GL_DEPTH_TEST);
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 	/*
@@ -67,7 +80,7 @@ bool GameEngine::InitializeGL(void)
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	model.loadmodel("modeload/cube.obj");
+
 	return true;
 }
 
@@ -90,7 +103,7 @@ void GameEngine::ResizeWindow(int width, int height)
 	/* Calculate The Aspect Ratio And Set The Clipping Volume */
 	if (height == 0)
 		height = 1;
-	gluPerspective(45.0f, (float)width/height, 0.1, 100.0);
+	gluPerspective(45.0f, (float)width/height, 0.1, 1000.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -135,14 +148,32 @@ void GameEngine::Render(SDL_Window *window)
 
 	/* Draw whatever is specified for the program */
 	RenderGame();
+/*
+glBegin( GL_TRIANGLES );
+glColor3f( 1.0f, 0.0f, 0.0f ); glVertex3f( 0.0f, 1.f, 0.0f );
+glColor3f( 0.0f, 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, 1.0f );
+glColor3f( 0.0f, 0.0f, 1.0f ); glVertex3f( 1.0f, -1.0f, 1.0f);
 
-	std::vector<struct Vector3D> vertices;
-	for (size_t i = 0; i < model.vertindex.size(); i++) {
-		unsigned int vertindex = model.vertindex[i];
-		struct Vector3D vertex = model.vertices[vertindex - 1];
-		vertices.push_back(vertex);
+glColor3f( 1.0f, 0.0f, 0.0f ); glVertex3f( 0.0f, 1.0f, 0.0f);
+glColor3f( 0.0f, 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, 1.0f);
+glColor3f( 0.0f, 0.0f, 1.0f ); glVertex3f( 0.0f, -1.0f, -1.0f);
+
+glColor3f( 1.0f, 0.0f, 0.0f ); glVertex3f( 0.0f, 1.0f, 0.0f);
+glColor3f( 0.0f, 1.0f, 0.0f ); glVertex3f( 0.0f, -1.0f, -1.0f);
+glColor3f( 0.0f, 0.0f, 1.0f ); glVertex3f( 1.0f, -1.0f, 1.0f);
+
+
+glColor3f( 1.0f, 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, 1.0f);
+glColor3f( 0.0f, 1.0f, 0.0f ); glVertex3f( 0.0f, -1.0f, -1.0f);
+glColor3f( 0.0f, 0.0f, 1.0f ); glVertex3f( 1.0f, -1.0f, 1.0f);
+
+glEnd();*/
+	
+	glBegin(GL_TRIANGLES);
+	for (size_t i = 0; i < model.vertices.size(); i++) {
+		glVertex3f(model.vertices[i].x, model.vertices[i].y, model.vertices[i].z);
 	}
-
+	glEnd();
 	// This will identify our vertex buffer
 	GLuint vertexbuffer;
 	 
@@ -153,26 +184,29 @@ void GameEngine::Render(SDL_Window *window)
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
 	 
 	// Give our vertices to OpenGL.
-	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(Vector3D), &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, model.vertices.size()*sizeof(Vector3D), &model.vertices[0], GL_STATIC_DRAW);
 
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+//glEnableClientState(GL_VERTEX_ARRAY);
+
 	glVertexAttribPointer(
 	   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
 	   3,                  // size
 	   GL_FLOAT,           // type
 	   GL_FALSE,           // normalized?
 	   0,                  // stride
-	   (void*)0            // array buffer offset
+	   0            // array buffer offset
 	);
 	 
 	// Draw the triangle !
 	glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-	 
-	glDisableVertexAttribArray(0);
+	//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
-	
+	glDisableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	/* Actually draw everything to the screen */
 	SDL_GL_SwapWindow(window);
 }
@@ -237,6 +271,7 @@ int main(int argc, char *argv[])
 	bool done = false;
 	bool isActive = true;
 
+	model.loadmodel("modeload/liberty.obj");	
 
 	/* Only run the program if we successfully create the game engine */
 	if (InitializeGame()) {
