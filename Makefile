@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-c -Wall -g
-LDFLAGS= -lGL -lGLU -lSDL2
+LDFLAGS= -lGLEW -lGL -lGLU -lSDL2
 INCLUDES=$(CUR_DIR)include/
 
 sdlprog: src/game_engine.o src/camera.o src/model_loader.o src/game.o

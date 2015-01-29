@@ -9,14 +9,15 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 //#include <SDL_OpenGL.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+
 #include <math.h>
 #include "structs.h"
 #include "camera.h"
 #include "model_loader.h"
 
-void ReadData(char *filename, int numPoints, Polygon *triangle);
 /* Game functions */
 bool InitializeGame(void);
 bool StartGame(void);

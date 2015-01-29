@@ -16,8 +16,10 @@
 struct Vector3D {
 	float x, y, z;
 };
-struct Polygon {
-	Vector3D vertex[3];
-};
 
+struct face {
+	unsigned int vertindex[3];
+	unsigned int uvindex[3];
+	unsigned int normindex[3];
+};
 #endif

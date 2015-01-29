@@ -10,6 +10,7 @@
 #define DEBUG 1  /* Used for enabling verbose output to test program */
 
 GameEngine *GameEngine::game_engine = NULL;
+ModelLoader model;
 
 /* Constructors and destructors */
 GameEngine::GameEngine(int screen_width, int screen_height, int screen_bpp)
@@ -33,7 +34,7 @@ bool GameEngine::InitializeGL(void)
 	Vector3D camera_center_ = {0.0f, 0.0f, 1.0f};
 	Vector3D camera_up_ = {0.0f, 1.0f, 0.0f};
 
-	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.1f);
+	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.8f);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
@@ -50,7 +51,7 @@ bool GameEngine::InitializeGL(void)
 
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
-	
+	/*
 	GLfloat const light_pos[4]     = {-1.00,  1.00,  1.00, 0.0};
 	GLfloat const light_color[4]   = { 0.85,  0.90,  0.70, 1.0};
 	GLfloat const light_ambient[4] = { 0.10,  0.10,  0.30, 1.0};
@@ -60,14 +61,13 @@ bool GameEngine::InitializeGL(void)
 
 	glEnable(GL_LIGHT0);
 	glEnable(GL_LIGHTING);
-
-	glEnable(GL_DEPTH_TEST);
+*/
 	
 	/* Gives us pretty calculations for perspective */
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
+	model.loadmodel("modeload/cube.obj");
 	return true;
 }
 
@@ -135,27 +135,44 @@ void GameEngine::Render(SDL_Window *window)
 
 	/* Draw whatever is specified for the program */
 	RenderGame();
-	glTranslatef(3.0f, 0.0f, 5.0f);	/* Begin 3 right, 0 up, 5 back (towards screen) */
-glBegin(GL_QUADS);
 
-glNormal3f(0.181636,-0.25,0.951057);
+	std::vector<struct Vector3D> vertices;
+	for (size_t i = 0; i < model.vertindex.size(); i++) {
+		unsigned int vertindex = model.vertindex[i];
+		struct Vector3D vertex = model.vertices[vertindex - 1];
+		vertices.push_back(vertex);
+	}
 
-glVertex3f(0.549,-0.756,0.261);
+	// This will identify our vertex buffer
+	GLuint vertexbuffer;
+	 
+	// Generate 1 buffer, put the resulting identifier in vertexbuffer
+	glGenBuffers(1, &vertexbuffer);
+	 
+	// The following commands will talk about our 'vertexbuffer' buffer
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	 
+	// Give our vertices to OpenGL.
+	glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(Vector3D), &vertices[0], GL_STATIC_DRAW);
 
-glNormal3f(0.095492,-0.29389,0.95106);
+	// 1rst attribute buffer : vertices
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glVertexAttribPointer(
+	   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+	   3,                  // size
+	   GL_FLOAT,           // type
+	   GL_FALSE,           // normalized?
+	   0,                  // stride
+	   (void*)0            // array buffer offset
+	);
+	 
+	// Draw the triangle !
+	glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+	 
+	glDisableVertexAttribArray(0);
 
-glVertex3f(0.288,-0.889,0.261);
-
-glNormal3f(0.18164,-0.55902,0.80902);
-
-glVertex3f(0.312,-0.962,0.222);
-
-glNormal3f(0.34549,-0.47553,0.80902);
-
-glVertex3f(0.594,-0.818,0.222);
-
-glEnd();
- 
+	
 	/* Actually draw everything to the screen */
 	SDL_GL_SwapWindow(window);
 }
@@ -220,13 +237,13 @@ int main(int argc, char *argv[])
 	bool done = false;
 	bool isActive = true;
 
+
 	/* Only run the program if we successfully create the game engine */
 	if (InitializeGame()) {
 		if (GameEngine::GetEngine()->InitializeGL() == false) {
 			std::cerr << "Could not initialize OpenGL" << std::endl;
 			GameEngine::GetEngine()->QuitProgram();
 		}
-
 
 		/* Initialize SDL */
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -250,6 +267,14 @@ int main(int argc, char *argv[])
 		/* Resize our initial window */
 		GameEngine::GetEngine()->ResizeWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
 		//SDL_SetRelativeMouseMode(SDL_TRUE); /* This is broken. Why */
+
+		// Init GLEW
+		glewExperimental = true;
+		if ( glewInit() != GLEW_OK )
+		{
+		    std::cerr << "Failed to initialize GLEW." << std::endl;
+		    exit(-1);
+		}
 
 		/* Start event loop to handle program now */
 		while (!done) {
