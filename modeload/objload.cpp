@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <locale>
 #include <vector>
+#include <string.h>
 using namespace std;
 
 struct vec3 {
@@ -45,28 +46,30 @@ static void getnormal(char *c, char *n, FILE *f, vector<struct vec3> *normal)
 static void getface(char *c, char *n, FILE *f, vector<struct face> *face)
 {
 	struct face temp;
+	char line[128]; /* Should accomodate very big models... */
 
-	*c= fgetc(f);
-	*c= fgetc(f);
-	*n= fgetc(f);
-	/* Check for the vertex//normal case */
-	if (*n == '/') {
-		temp.vertindex[0] = atoi(c);
-		*n = fgetc(f);
-		if (*n == '/') {
-			if (fscanf(f, "%i %i//%i %i//%i",
-				&temp.normindex[0],
+	fgets(line, 128, f);
+	if (sscanf(line, "%i %i %i", &temp.vertindex[0], &temp.vertindex[1], &temp.vertindex[2]) <= 0) {
+		/* f v1 v2 v3 */
+	} else if (sscanf(line, "%i/%i %i/%i %i/%i",
+				&temp.vertindex[0],&temp.uvindex[0],
+				&temp.vertindex[1], &temp.uvindex[1],
+				&temp.vertindex[2], & temp.uvindex[2]) == 6) {
+		/* f v1/vt1 v2/vt2 v3/vt3 */
+	} else if (sscanf(line, "%i//%i %i//%i %i//%i",
+				&temp.vertindex[0],&temp.normindex[0],
 				&temp.vertindex[1], &temp.normindex[1],
-				&temp.vertindex[2], & temp.normindex[2]) <= 0)
-					exerr("Failed to read faces!");
-		} else { 
-			exerr(" VERTEX/TEXTURE FORMAT ");
-			exit(EXIT_FAILURE);
-		}
-	} else if (*n == ' ') {
-		/* Handle f v v v format */
-		if (fscanf(f, "%i %i %i", &temp.vertindex[0], &temp.vertindex[1], &temp.vertindex[2]) <= 0)
-			exerr("Failed to read faces! - expecting: f v v v");
+				&temp.vertindex[2], & temp.normindex[2]) == 6) {
+		/* f v1//vn1 v2//vn2 v3//vn3 */
+	} else if (sscanf(line, "%i/%i/%i %i/%i/%i %i/%i/%i",&temp.vertindex[0],
+				&temp.uvindex[0],&temp.normindex[0],
+				&temp.vertindex[1],
+				&temp.uvindex[1],
+				&temp.normindex[1],
+				&temp.vertindex[2],
+				&temp.uvindex[2],
+				&temp.normindex[2]) == 9) {
+		/* f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 */
 	}
 
 
@@ -107,16 +110,18 @@ int main(int argc, char *argv[])
 	cout << vertices.size() << " vertices\n" <<
 			normals.size() << " normals\n" <<
 			faces.size() << " Triangles (faces)" << endl;
-	for (size_t i = 0; i < vertices.size(); i++)
+/*	for (size_t i = 0; i < vertices.size(); i++)
 		cout << vertices[i].x << " "<< vertices[i].y << " " << vertices[i].z << endl;
 	for (size_t i = 0; i < normals.size(); i++)
-		cout << normals[i].x << " " << normals[i].y << " " << normals[i].z << endl;
+		cout << normals[i].x << " " << normals[i].y << " " << normals[i].z << endl;*/
 	for (size_t i = 0; i < faces.size(); i++)
-		cout << faces[i].vertindex[0] << "//" << faces[i].normindex[0] << endl;
-	for (size_t i = 0; i < faces.size(); i++)
-		cout << faces[i].vertindex[0] << " " << faces[i].vertindex[1] << " " << faces[i].vertindex[2] << endl;
-
+		cout << faces[i].vertindex[0] << "//" << faces[i].uvindex[0] << endl;
+	//for (size_t i = 0; i < faces.size(); i++)
+	//	cout << faces[i].vertindex[0] << " " << faces[i].vertindex[1] << " " << faces[i].vertindex[2] << endl;
+	//for (size_t i = 0; i < faces.size(); i++)
+	//	cout << faces[i].vertindex[0] << " " << faces[i].uvindex[0] << " " << faces[i].normindex[0] << "|" << faces[i].vertindex[1] << " " << faces[i].uvindex[1] << " " << faces[i].normindex[1] << "|" << faces[i].vertindex[2] << " " << faces[i].uvindex[2] << " " << faces[i].normindex[2]<< endl;
 	fclose(file);
 
 	return 0;
 }
+
