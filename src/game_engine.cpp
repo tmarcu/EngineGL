@@ -34,7 +34,7 @@ bool GameEngine::InitializeGL(void)
 	Vector3D camera_center_ = {0.0f, 0.0f, 1.0f};
 	Vector3D camera_up_ = {0.0f, 1.0f, 0.0f};
 
-	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.8f);
+	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.1f);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
@@ -49,33 +49,21 @@ bool GameEngine::InitializeGL(void)
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
 
-   GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-   GLfloat mat_shininess[] = { 50.0 };
-   GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
-   glClearColor (0.0, 0.0, 0.0, 0.0);
-   glShadeModel (GL_SMOOTH);
-
-   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
-   glEnable(GL_LIGHTING);
-   glEnable(GL_LIGHT0);
-   glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_BACK);
-	/*
-	GLfloat const light_pos[4]     = {-1.00,  1.00,  1.00, 0.0};
-	GLfloat const light_color[4]   = { 0.85,  0.90,  0.70, 1.0};
-	GLfloat const light_ambient[4] = { 0.10,  0.10,  0.30, 1.0};
-	glLightfv(GL_LIGHT0, GL_POSITION, light_pos),
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-
-	glEnable(GL_LIGHT0);
-	glEnable(GL_LIGHTING);
-*/
-	
+	/* Set up our VAO */
+	glGenVertexArrays(1, &model.vao); 
+	glBindVertexArray(model.vao);
+  
+	/* Set up our VBO and load the model(s) */
+	glGenBuffers(1, &model.vbo); 
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbo);  
+	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(GLfloat), &model.vertices[3], GL_STATIC_DRAW);
+  
+	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+  
+	/* Disable the VAO and VBO */
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+  	
 	/* Gives us pretty calculations for perspective */
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -103,7 +91,7 @@ void GameEngine::ResizeWindow(int width, int height)
 	/* Calculate The Aspect Ratio And Set The Clipping Volume */
 	if (height == 0)
 		height = 1;
-	gluPerspective(45.0f, (float)width/height, 0.1, 1000.0);
+	gluPerspective(45.0f, (float)width/height, 1, 1000.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -148,73 +136,30 @@ void GameEngine::Render(SDL_Window *window)
 
 	/* Draw whatever is specified for the program */
 	RenderGame();
-/*
-glBegin( GL_TRIANGLES );
-glColor3f( 1.0f, 0.0f, 0.0f ); glVertex3f( 0.0f, 1.f, 0.0f );
-glColor3f( 0.0f, 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, 1.0f );
-glColor3f( 0.0f, 0.0f, 1.0f ); glVertex3f( 1.0f, -1.0f, 1.0f);
-
-glColor3f( 1.0f, 0.0f, 0.0f ); glVertex3f( 0.0f, 1.0f, 0.0f);
-glColor3f( 0.0f, 1.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, 1.0f);
-glColor3f( 0.0f, 0.0f, 1.0f ); glVertex3f( 0.0f, -1.0f, -1.0f);
-
-glColor3f( 1.0f, 0.0f, 0.0f ); glVertex3f( 0.0f, 1.0f, 0.0f);
-glColor3f( 0.0f, 1.0f, 0.0f ); glVertex3f( 0.0f, -1.0f, -1.0f);
-glColor3f( 0.0f, 0.0f, 1.0f ); glVertex3f( 1.0f, -1.0f, 1.0f);
-
-
-glColor3f( 1.0f, 0.0f, 0.0f ); glVertex3f( -1.0f, -1.0f, 1.0f);
-glColor3f( 0.0f, 1.0f, 0.0f ); glVertex3f( 0.0f, -1.0f, -1.0f);
-glColor3f( 0.0f, 0.0f, 1.0f ); glVertex3f( 1.0f, -1.0f, 1.0f);
-
-glEnd();*/
-	
+	/*
 	glBegin(GL_TRIANGLES);
 	for (size_t i = 0; i < model.vertices.size(); i++) {
 		glVertex3f(model.vertices[i].x, model.vertices[i].y, model.vertices[i].z);
 	}
-	glEnd();
-	// This will identify our vertex buffer
-	GLuint vertexbuffer;
-	 
-	// Generate 1 buffer, put the resulting identifier in vertexbuffer
-	glGenBuffers(1, &vertexbuffer);
-	 
-	// The following commands will talk about our 'vertexbuffer' buffer
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	 
-	// Give our vertices to OpenGL.
-	glBufferData(GL_ARRAY_BUFFER, model.vertices.size()*sizeof(Vector3D), &model.vertices[0], GL_STATIC_DRAW);
-
-	// 1rst attribute buffer : vertices
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-//glEnableClientState(GL_VERTEX_ARRAY);
-
-	glVertexAttribPointer(
-	   0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-	   3,                  // size
-	   GL_FLOAT,           // type
-	   GL_FALSE,           // normalized?
-	   0,                  // stride
-	   0            // array buffer offset
-	);
-	 
-	// Draw the triangle !
-	glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-	//glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
-
-	glDisableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
+	glEnd(); */
+	
+	/* Bind our VAO before we can use it */
+	glBindVertexArray(model.vao);
+	glDrawArrays(GL_TRIANGLES, 0, model.vertices.size());
+	glBindVertexArray(0);
 	/* Actually draw everything to the screen */
 	SDL_GL_SwapWindow(window);
 }
 
 bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 {
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+//	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+//      SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+
 	/* Initialize SDL */
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
 		std::cerr << "Video initialization failed: %s\n" << SDL_GetError() << std::endl;
 		return false;
 	}
@@ -231,6 +176,16 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 	glcontext_ = SDL_GL_CreateContext(window_);
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetSwapInterval(0); // 0 = vsync off
+
+	/* This is not needed for me... but lower opengl versions may need it */
+//	glewExperimental = GL_TRUE;
+	GLuint glewerr = glewInit();
+	if ( glewerr != GLEW_OK )
+	{
+		std::cerr << "Failed to initialize GLEW." << std::endl;
+		exit(-1);
+	}
 
 	return true;
 }
@@ -271,24 +226,17 @@ int main(int argc, char *argv[])
 	bool done = false;
 	bool isActive = true;
 
-	model.loadmodel("modeload/liberty.obj");	
+	model.loadmodel("modeload/cube.obj");	
 
 	/* Only run the program if we successfully create the game engine */
-	if (InitializeGame()) {
-		if (GameEngine::GetEngine()->InitializeGL() == false) {
-			std::cerr << "Could not initialize OpenGL" << std::endl;
-			GameEngine::GetEngine()->QuitProgram();
-		}
-
-		/* Initialize SDL */
-		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-			std::cerr << "Video initialization failed: %s\n" << SDL_GetError() << std::endl;;
-			return -1;
-		}
-
+	if (InitializeGame() == true) {
 		if (GameEngine::GetEngine()->SetupSDL(1024, 768) != true) {
 			std::cerr << "SDL initialization failed: %s\n" << SDL_GetError() << std::endl;;
 			return -1;
+		}
+		if (GameEngine::GetEngine()->InitializeGL() == false) {
+			std::cerr << "Could not initialize OpenGL" << std::endl;
+			GameEngine::GetEngine()->QuitProgram();
 		}
 
 		/* InitializeGL does not preserve this */
@@ -302,14 +250,6 @@ int main(int argc, char *argv[])
 		/* Resize our initial window */
 		GameEngine::GetEngine()->ResizeWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
 		//SDL_SetRelativeMouseMode(SDL_TRUE); /* This is broken. Why */
-
-		// Init GLEW
-		glewExperimental = true;
-		if ( glewInit() != GLEW_OK )
-		{
-		    std::cerr << "Failed to initialize GLEW." << std::endl;
-		    exit(-1);
-		}
 
 		/* Start event loop to handle program now */
 		while (!done) {

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <vector>
 #include <string>
+#include <GL/glu.h>
 #include "structs.h"
 
 class ModelLoader
@@ -21,7 +22,8 @@ public:
 	std::vector<unsigned int> vertindices;
 	std::vector<unsigned int> uvindices;
 	std::vector<unsigned int> normindices;
-
+	GLuint vao;
+	GLuint vbo;
 	ModelLoader();
 
 	~ModelLoader();

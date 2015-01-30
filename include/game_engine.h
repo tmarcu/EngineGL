@@ -10,8 +10,8 @@
 #include <SDL2/SDL.h>
 //#include <SDL_OpenGL.h>
 #include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
+//#include <GL/gl.h>
+//#include <GL/glu.h>
 
 #include <math.h>
 #include "structs.h"
