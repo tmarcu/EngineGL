@@ -119,14 +119,14 @@ void ModelLoader::loadmodel(string name)
 
 	struct Vector3D point;
 	unsigned int vertindex, normindex;
-	for (size_t i = 3; i < vertindices.size(); i++) {
+	for (size_t i = 0; i < vertindices.size(); i++) {
 		vertindex = vertindices[i];
-		point = temp_verts[vertindex - 1];
+		point = temp_verts[vertindex];
 		vertices.push_back(point);
 	}
 
 	cout << vertices.size() << " vertices\n" <<
-	normals.size() << " normals\n" << endl;
-//	faces.size() << " Triangles (faces)" << endl;
+	normals.size() << " normals\n" <<
+	vertices.size()/3 << " Triangles (faces)" << endl;
 }
 
