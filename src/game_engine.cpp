@@ -34,7 +34,7 @@ bool GameEngine::InitializeGL(void)
 	Vector3D camera_center_ = {0.0f, 0.0f, 1.0f};
 	Vector3D camera_up_ = {0.0f, 1.0f, 0.0f};
 
-	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.001f);
+	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.10f);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
@@ -176,7 +176,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 	glcontext_ = SDL_GL_CreateContext(window_);
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetSwapInterval(0); // 0 = vsync off
+	SDL_GL_SetSwapInterval(1); // 0 = vsync off
 
 	/* This is not needed for me... but lower opengl versions may need it */
 //	glewExperimental = GL_TRUE;
