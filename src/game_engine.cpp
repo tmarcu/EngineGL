@@ -226,6 +226,11 @@ int main(int argc, char *argv[])
 	SDL_Event event;
 	SDL_Window *window = NULL;
 
+	if (argv[1] == NULL) {
+		std::cerr << "ERROR: Please specify a model!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
 	model.loadmodel(argv[1]);	
 
 	/* Only run the program if we successfully create the game engine */
@@ -236,7 +241,7 @@ int main(int argc, char *argv[])
 
 	if (GameEngine::GetEngine()->SetupSDL(1024, 768) != true) {
 		std::cerr << "SDL initialization failed: %s\n" << SDL_GetError() << std::endl;;
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 	if (GameEngine::GetEngine()->InitializeGL() == false) {
 		std::cerr << "Could not initialize OpenGL" << std::endl;
