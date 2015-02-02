@@ -17,6 +17,7 @@ class ModelLoader
 {
 public:
 	std::vector<struct Vector3D> vertices;
+	std::vector<struct Vector3D> uvs;
 	std::vector<struct Vector3D> normals;
 	std::vector<struct face> faces;
 	std::vector<unsigned int> vertindices;

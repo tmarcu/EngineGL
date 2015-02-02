@@ -19,6 +19,8 @@ GameEngine::GameEngine(int screen_width, int screen_height, int screen_bpp)
 	screen_width_ = screen_width;
 	screen_height_ = screen_height;
 	screen_bpp_ = screen_bpp;
+	isactive = false;
+	isrunning = false;
 }
 
 GameEngine::~GameEngine(void)
@@ -78,7 +80,6 @@ void GameEngine::QuitProgram(void)
 	if (camera_ != NULL)	
 		delete(camera_);
 	SDL_GL_DeleteContext(glcontext_);
-
 	SDL_DestroyWindow(window_);
 }
 
@@ -91,7 +92,7 @@ void GameEngine::ResizeWindow(int width, int height)
 	/* Calculate The Aspect Ratio And Set The Clipping Volume */
 	if (height == 0)
 		height = 1;
-	gluPerspective(45.0f, (float)width/height, 1, 1000.0);
+	gluPerspective(45.0f, (float)width/height, 0.1, 1000.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -184,7 +185,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 	if ( glewerr != GLEW_OK )
 	{
 		std::cerr << "Failed to initialize GLEW." << std::endl;
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 
 	return true;
@@ -212,7 +213,8 @@ void GameEngine::HandleEvent(SDL_Event event)
 		camera_->MouseMoved(event.motion.x, event.motion.y, SCREEN_HALF_WIDTH, SCREEN_HALF_HEIGHT);
 		break;
 	case SDL_QUIT:
-		GameEngine::GetEngine()->QuitProgram();
+		GameEngine::GetEngine()->SetActive(false);
+		GameEngine::GetEngine()->SetRunning(false);
 		break;
 	default:
 		break;
@@ -223,56 +225,59 @@ int main(int argc, char *argv[])
 {
 	SDL_Event event;
 	SDL_Window *window = NULL;
-	bool done = false;
-	bool isActive = true;
 
-	model.loadmodel("modeload/cube.obj");	
+	model.loadmodel(argv[1]);	
 
 	/* Only run the program if we successfully create the game engine */
-	if (InitializeGame() == true) {
-		if (GameEngine::GetEngine()->SetupSDL(1024, 768) != true) {
-			std::cerr << "SDL initialization failed: %s\n" << SDL_GetError() << std::endl;;
-			return -1;
+	if (InitializeGame() != true) {
+		std::cerr << "Could not initialize GameEngine!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	if (GameEngine::GetEngine()->SetupSDL(1024, 768) != true) {
+		std::cerr << "SDL initialization failed: %s\n" << SDL_GetError() << std::endl;;
+		return -1;
+	}
+	if (GameEngine::GetEngine()->InitializeGL() == false) {
+		std::cerr << "Could not initialize OpenGL" << std::endl;
+		GameEngine::GetEngine()->QuitProgram();
+	}
+
+	GameEngine::GetEngine()->SetRunning(true);
+	GameEngine::GetEngine()->SetActive(true);
+
+	/* InitializeGL does not preserve this */
+	glEnable(GL_DEPTH_TEST);
+
+	window = GameEngine::GetEngine()->GetWindow();
+
+	/* Enable or disable for real FPS view */
+	SDL_ShowCursor(SDL_DISABLE);
+
+	/* Resize our initial window */
+	GameEngine::GetEngine()->ResizeWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	/* Start event loop to handle program now */
+	while (GameEngine::GetEngine()->IsRunning()) {
+		/* Handle whatever events may be in the queue */
+		while (SDL_PollEvent(&event)) {
+			GameEngine::GetEngine()->HandleEvent(event);
 		}
-		if (GameEngine::GetEngine()->InitializeGL() == false) {
-			std::cerr << "Could not initialize OpenGL" << std::endl;
-			GameEngine::GetEngine()->QuitProgram();
-		}
 
-		/* InitializeGL does not preserve this */
-		glEnable(GL_DEPTH_TEST);
+		/* this makes sure the camera will still have speed when it reaches the minimum  */
+		if(GameEngine::GetEngine()->GetCamera()->GetMoveSpeed() <= 0.05f)
+			GameEngine::GetEngine()->GetCamera()->SetMoveSpeed(0.05f);
 
-		window = GameEngine::GetEngine()->GetWindow();
+		GameEngine::GetEngine()->HandleKeystate();
 
-		/* Enable or disable for real FPS view */
-		SDL_ShowCursor(SDL_DISABLE);
-
-		/* Resize our initial window */
-		GameEngine::GetEngine()->ResizeWindow(SCREEN_WIDTH, SCREEN_HEIGHT);
-		//SDL_SetRelativeMouseMode(SDL_TRUE); /* This is broken. Why */
-
-		/* Start event loop to handle program now */
-		while (!done) {
-			/* Handle whatever events may be in the queue */
-			while (SDL_PollEvent(&event)) {
-				GameEngine::GetEngine()->HandleEvent(event);
-			}
-
-			/* this makes sure the camera will still have speed when it reaches the minimum  */
-			if(GameEngine::GetEngine()->GetCamera()->GetMoveSpeed() <= 0.05f)
-				GameEngine::GetEngine()->GetCamera()->SetMoveSpeed(0.05f);
-
-			GameEngine::GetEngine()->HandleKeystate();
+		/* Draw scene */
+		if (GameEngine::GetEngine()->IsActive()) {
 			SDL_WarpMouseInWindow(window, SCREEN_HALF_WIDTH, SCREEN_HALF_HEIGHT);
-			/* Draw scene */
-			if (isActive) {
-				GameEngine::GetEngine()->Render(window); // draw our scene
-			}
+			GameEngine::GetEngine()->Render(window);
 		}
 	}
 	/* Properly release everything and exit */
 	GameEngine::GetEngine()->QuitProgram();
 	EndGame();
-
 	return 0;
 }

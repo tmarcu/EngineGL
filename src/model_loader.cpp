@@ -106,9 +106,12 @@ void ModelLoader::loadmodel(string name)
 {
 	FILE *file;
 	char line[128];
+	unsigned int index;
+	struct Vector3D point;
 	std::vector<struct Vector3D> temp_verts;
 	std::vector<struct Vector3D> temp_uvs;
 	std::vector<struct Vector3D> temp_norms;
+
 
 	file =  fopen(name.c_str(), "r");
 	if (file == NULL) {
@@ -129,16 +132,31 @@ void ModelLoader::loadmodel(string name)
 		}
 	}
 
-	struct Vector3D point;
-	unsigned int vertindex;
 	for (size_t i = 0; i < vertindices.size(); i++) {
-		vertindex = vertindices[i];
-		point = temp_verts[vertindex - 1];
+		index = vertindices[i];
+		point = temp_verts[index - 1];
 		vertices.push_back(point);
 	}
 
+	if (normindices[0] == 0)
+		goto END;
+	for (size_t i = 0; i < normindices.size(); i++) {
+		index = normindices[i];
+		point = temp_norms[index - 1];
+		normals.push_back(point);
+	}
+
+	if (uvindices[0] == 0)
+		goto END;
+	for (size_t i = 0; i < uvindices.size(); i++) {
+		index = uvindices[i];
+		point = temp_uvs[index - 1];
+		uvs.push_back(point);
+	}
+
+END:
 	cout << vertices.size() << " vertices\n" <<
-	temp_norms.size() << " normals\n" <<
+	normals.size() << " normals\n" <<
 	vertices.size()/3 << " Triangles (faces)" << endl;
 }
 

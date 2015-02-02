@@ -16,3 +16,4 @@ sdlprog
 load
 Makefile
 *.obj
+*.swp

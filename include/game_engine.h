@@ -39,11 +39,15 @@ public:
 
 	/* Game engine methods */
 	static GameEngine *GetEngine() { return game_engine;};
+	bool IsActive() { return isactive;};
+	bool IsRunning() { return isrunning;};
+	void  SetActive(bool a) { isactive = a;};
+	void SetRunning(bool r) { isrunning = r;};
 
 	SDL_Window *GetWindow(void) { return window_;};
 	void SetGLContext(SDL_GLContext *context);
 	Camera *GetCamera() { return camera_;};
-	ModelLoader *get_mode() { return model_;};
+	ModelLoader *get_model() { return model_;};
 
 	bool SetupSDL(const int screen_width, const int screen_height);
 	bool InitializeGL(void);		/* Set up all of the openGL needed */
@@ -55,6 +59,8 @@ public:
 	void ResizeWindow(int width, int height);
 
 private:
+	bool isactive;
+	bool isrunning;
 	int screen_width_;
 	int screen_height_;
 	int screen_bpp_;
