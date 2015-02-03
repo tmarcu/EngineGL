@@ -36,7 +36,7 @@ bool GameEngine::InitializeGL(void)
 	Vector3D camera_center_ = {0.0f, 0.0f, 1.0f};
 	Vector3D camera_up_ = {0.0f, 1.0f, 0.0f};
 
-	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 0.10f);
+	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 10.0f);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
@@ -58,7 +58,7 @@ bool GameEngine::InitializeGL(void)
 	/* Set up our VBO and load the model(s) */
 	glGenBuffers(1, &model.vbo); 
 	glBindBuffer(GL_ARRAY_BUFFER, model.vbo);  
-	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(GLfloat), &model.vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(GLfloat)*3, &model.vertices[0], GL_STATIC_DRAW);
   
 	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
   
