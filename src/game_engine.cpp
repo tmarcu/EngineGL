@@ -51,20 +51,33 @@ bool GameEngine::InitializeGL(void)
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
 
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-
-	// Create light components.
-	GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 1.0f };
+	/* Setup light attributes */
+	GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 0.4f };
+	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, .8f };
 	GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	GLfloat position[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-	// Assign created components to GL_LIGHT0.
+	/* Setup light attributes */
+	GLfloat ambientLight1[] = { 0.2f, 0.2f, 0.2f, 0.3f };
+	GLfloat diffuseLight1[] = { 0.8f, 0.8f, 0.8, 0.7f };
+	GLfloat specularLight1[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	GLfloat position1[] = { 0.0f, 1.0f, -1.0f, 1.0f };
+
+	/* Apply attributes to lights */
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
 	glLightfv(GL_LIGHT0, GL_POSITION, position);
+
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambientLight1);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuseLight1);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, specularLight1);
+	glLightfv(GL_LIGHT1, GL_POSITION, position1);
+
+	/* Enable all the lights we want to use */
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_LIGHT1);
 
 	/* Set up our VAO */
 	glGenVertexArrays(1, &model.vao); 
