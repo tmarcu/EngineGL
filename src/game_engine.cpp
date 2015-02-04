@@ -36,7 +36,7 @@ bool GameEngine::InitializeGL(void)
 	Vector3D camera_center_ = {0.0f, 0.0f, 1.0f};
 	Vector3D camera_up_ = {0.0f, 1.0f, 0.0f};
 
-	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f,0.10f);
+	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 1.0f);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
@@ -54,7 +54,7 @@ bool GameEngine::InitializeGL(void)
 	/* Setup light attributes */
 	GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 0.4f };
 	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, .8f };
-	GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	GLfloat specularLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 	GLfloat position[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	/* Setup light attributes */
@@ -174,13 +174,6 @@ void GameEngine::Render(SDL_Window *window)
 
 	/* Draw whatever is specified for the program */
 	RenderGame();
-	/*
-	glBegin(GL_TRIANGLES);
-	for (size_t i = 0; i < model.vertices.size(); i++) {
-		glVertex3f(model.vertices[i].x, model.vertices[i].y, model.vertices[i].z);
-	}
-	glEnd(); */
-	glColor3f(100.0f, 0.0f, 0.0f);
 
 	/* Bind our VAO before we can use it */
 	glBindVertexArray(model.vao);
