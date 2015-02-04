@@ -36,7 +36,7 @@ bool GameEngine::InitializeGL(void)
 	Vector3D camera_center_ = {0.0f, 0.0f, 1.0f};
 	Vector3D camera_up_ = {0.0f, 1.0f, 0.0f};
 
-	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 10.0f);
+	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f,0.10f);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
@@ -51,19 +51,43 @@ bool GameEngine::InitializeGL(void)
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
 
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+
+	// Create light components.
+	GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 1.0f };
+	GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	GLfloat position[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+	// Assign created components to GL_LIGHT0.
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
+	glLightfv(GL_LIGHT0, GL_POSITION, position);
+
 	/* Set up our VAO */
 	glGenVertexArrays(1, &model.vao); 
 	glBindVertexArray(model.vao);
-  
-	/* Set up our VBO and load the model(s) */
-	glGenBuffers(1, &model.vbo); 
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbo);  
-	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(GLfloat)*3, &model.vertices[0], GL_STATIC_DRAW);
-  
+
+	/* Set up our VBOs and load the model(s) */
+	glGenBuffers(1, &model.vbvert);
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbvert);  
+	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(struct Vector3D), &model.vertices[0], GL_STATIC_DRAW);
+ 
+	glGenBuffers(1, &model.vbnorm);
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbnorm);
+	glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(struct Vector3D), &model.normals[0], GL_STATIC_DRAW);
+
+	/* Set up the pointer for each VBO */
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbvert);
 	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-  
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbnorm);
+	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
 	/* Disable the VAO and VBO */
 	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
 	glBindVertexArray(0);
   	
 	/* Gives us pretty calculations for perspective */
@@ -92,7 +116,7 @@ void GameEngine::ResizeWindow(int width, int height)
 	/* Calculate The Aspect Ratio And Set The Clipping Volume */
 	if (height == 0)
 		height = 1;
-	gluPerspective(45.0f, (float)width/height, 0.1, 1000.0);
+	gluPerspective(45.0f, (float)width/height, 0.1, 10000.0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -144,10 +168,14 @@ void GameEngine::Render(SDL_Window *window)
 	}
 	glEnd(); */
 	glColor3f(100.0f, 0.0f, 0.0f);
+
 	/* Bind our VAO before we can use it */
 	glBindVertexArray(model.vao);
+
 	glDrawArrays(GL_TRIANGLES, 0, model.vertices.size());
+
 	glBindVertexArray(0);
+
 	/* Actually draw everything to the screen */
 	SDL_GL_SwapWindow(window);
 }

@@ -24,7 +24,8 @@ public:
 	std::vector<unsigned int> uvindices;
 	std::vector<unsigned int> normindices;
 	GLuint vao;
-	GLuint vbo;
+	GLuint vbvert;
+	GLuint vbnorm;
 	ModelLoader();
 
 	~ModelLoader();
