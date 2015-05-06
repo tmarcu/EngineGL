@@ -1,24 +1,24 @@
 /*
  * EngineGL
- * Copyright (C) 2013 Tudor Marcu. All rights reserved.
+ * Copyright (C) 2015 Tudor Marcu. All rights reserved.
  */
 
 #include <iostream>
 #include <string>
 #include <cstring>
-#include "model_loader.h"
+#include "model.h"
 
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 
-ModelLoader::ModelLoader()
+Model::Model()
 {
 
 }
 
-ModelLoader::~ModelLoader()
+Model::~Model()
 {
 
 }
@@ -28,7 +28,7 @@ static void exerr(string msg)
 	cout << msg << endl;
 }
 
-void ModelLoader::getvertex(char *str, vector<struct Vector3D> *vertex)
+void Model::getvertex(char *str, vector<struct Vector3D> *vertex)
 {
 	struct Vector3D vert;
 
@@ -40,7 +40,7 @@ void ModelLoader::getvertex(char *str, vector<struct Vector3D> *vertex)
 	vertex->push_back(vert);
 }
 
-void ModelLoader::getuv(char *str, vector<struct Vector3D> *uv)
+void Model::getuv(char *str, vector<struct Vector3D> *uv)
 {
 	struct Vector3D vert;
 
@@ -53,7 +53,7 @@ void ModelLoader::getuv(char *str, vector<struct Vector3D> *uv)
 	uv->push_back(vert);
 }
 
-void ModelLoader::getnormal(char *str, vector<struct Vector3D> *normal)
+void Model::getnormal(char *str, vector<struct Vector3D> *normal)
 {
 	struct Vector3D vert;
 
@@ -64,7 +64,7 @@ void ModelLoader::getnormal(char *str, vector<struct Vector3D> *normal)
 	normal->push_back(vert);
 }
 
-void ModelLoader::getface(char *str, vector<unsigned int> *vertindex, vector<unsigned int> *uvindex, vector<unsigned int> *normindex)
+void Model::getface(char *str, vector<unsigned int> *vertindex, vector<unsigned int> *uvindex, vector<unsigned int> *normindex)
 {
 	struct face temp;
 
@@ -102,7 +102,7 @@ void ModelLoader::getface(char *str, vector<unsigned int> *vertindex, vector<uns
 	normindex->push_back(temp.normindex[2]);
 }
 
-void ModelLoader::loadmodel(string name)
+void Model::loadmodel(string name)
 {
 	FILE *file;
 	char line[128];

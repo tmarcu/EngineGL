@@ -3,8 +3,8 @@ CFLAGS=-c -Wall -g
 LDFLAGS= -lGLEW -lGL -lGLU -lSDL2
 INCLUDES=$(CUR_DIR)include/
 
-sdlprog: src/game_engine.o src/camera.o src/model_loader.o src/game.o
-	$(CC) -o sdlprog src/game_engine.o src/camera.o src/model_loader.o src/game.o -I$(INCLUDES) $(LDFLAGS)
+sdlprog: src/game_engine.o src/camera.o src/model.o src/game.o
+	$(CC) -o sdlprog src/game_engine.o src/camera.o src/model.o src/game.o -I$(INCLUDES) $(LDFLAGS)
     
 src/game_engine.o: src/game_engine.cpp include/game_engine.h include/structs.h
 	$(CC) $(CFLAGS) $< -I$(INCLUDES) -o $@
@@ -15,7 +15,7 @@ src/game.o: src/game.cpp include/game.h
 src/camera.o: src/camera.cpp include/camera.h include/structs.h
 	$(CC) $(CFLAGS) $< -I$(INCLUDES) -o $@
     
-src/model_loader.o: src/model_loader.cpp include/model_loader.h include/structs.h
+src/model.o: src/model.cpp include/model.h include/structs.h
 	$(CC) $(CFLAGS) $< -I$(INCLUDES) -o $@
     
 clean:

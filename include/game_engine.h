@@ -1,6 +1,6 @@
 /*
  * EngineGL
- * Copyright (C) 2013 Tudor Marcu. All rights reserved.
+ * Copyright (C) 2015 Tudor Marcu. All rights reserved.
  */
 
 #pragma once
@@ -16,7 +16,7 @@
 #include <math.h>
 #include "structs.h"
 #include "camera.h"
-#include "model_loader.h"
+#include "model.h"
 
 /* Game functions */
 bool InitializeGame(void);
@@ -47,10 +47,10 @@ public:
 	SDL_Window *GetWindow(void) { return window_;};
 	void SetGLContext(SDL_GLContext *context);
 	Camera *GetCamera() { return camera_;};
-	ModelLoader *get_model() { return model_;};
 
 	bool SetupSDL(const int screen_width, const int screen_height);
 	bool InitializeGL(void);		/* Set up all of the openGL needed */
+	void LoadModelVAO(void);	/* Load and store the model in the OpenGL buffer */
 	void QuitProgram(void);		/* Free appropriate memory */
 	void Render(SDL_Window *window);			/* Render the scene after all drawing done */
 	void HandleEvent(SDL_Event event);  /* Handle incoming events */
@@ -68,7 +68,6 @@ private:
 	SDL_Window *window_;
 	SDL_GLContext glcontext_;
 	Camera *camera_;
-	ModelLoader *model_;
 
 	static Vector3D camera_position_;
 	static Vector3D camera_center_;

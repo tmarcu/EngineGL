@@ -3,8 +3,8 @@
  * Copyright (C) 2013 Tudor Marcu. All rights reserved.
  */
 
-#ifndef MODEL_LOADER_H
-#define MODEL_LOADER_H
+#ifndef MODEL_H
+#define MODEL_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +13,7 @@
 #include <GL/glu.h>
 #include "structs.h"
 
-class ModelLoader
+class Model
 {
 public:
 	std::vector<struct Vector3D> vertices;
@@ -26,9 +26,9 @@ public:
 	GLuint vao;
 	GLuint vbvert;
 	GLuint vbnorm;
-	ModelLoader();
+	Model();
 
-	~ModelLoader();
+	~Model();
 
 	void getvertex(char *str, std::vector<struct Vector3D> *vertex);
 	void getuv(char *str, std::vector<struct Vector3D> *uv);

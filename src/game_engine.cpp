@@ -1,16 +1,19 @@
 /*
  * EngineGL
- * Copyright (C) 2013 Tudor Marcu. All rights reserved.
+ * Copyright (C) 2015 Tudor Marcu. All rights reserved.
  */
 
 #include <iostream>
-
+#include <fstream>
 #include "game_engine.h"
 
 #define DEBUG 1  /* Used for enabling verbose output to test program */
 
+float vcolor[4] = {0.0, 1.0, 0.0, 1.0};
+
 GameEngine *GameEngine::game_engine = NULL;
-ModelLoader model;
+Model model;
+unsigned int program;
 
 /* Constructors and destructors */
 GameEngine::GameEngine(int screen_width, int screen_height, int screen_bpp)
@@ -26,6 +29,83 @@ GameEngine::GameEngine(int screen_width, int screen_height, int screen_bpp)
 GameEngine::~GameEngine(void)
 {
 	SDL_Quit();
+}
+
+static std::string ReadShader(const char *filename)
+{
+	std::ifstream input(filename);
+
+	if (!input.good()) {
+		printf("Failed to open file %s\n", filename);
+		exit(EXIT_FAILURE);
+	}
+
+	return std::string(std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>());
+}
+
+static void InitializeShaders(void)
+{
+	const char *shader[1];
+	unsigned int vertexID;
+	unsigned int fragmentID;
+	int ret;
+	std::string shaderfile;
+
+	vertexID = glCreateShader(GL_VERTEX_SHADER);
+	fragmentID = glCreateShader(GL_FRAGMENT_SHADER);
+
+	shaderfile = ReadShader("shaders/vertexshader.vs");
+	shader[0] = shaderfile.c_str();
+	glShaderSource(vertexID, 1, shader, 0);
+
+	shaderfile = ReadShader("shaders/fragmentshader.fs");
+	shader[0] = shaderfile.c_str();
+	glShaderSource(fragmentID, 1, shader, 0);
+
+	glCompileShader(vertexID);
+	glGetShaderiv(vertexID, GL_COMPILE_STATUS, &ret);
+	if (ret != GL_TRUE) {
+		printf("Failed to compile vertex shader!\n");
+	}
+
+	glCompileShader(fragmentID);
+	glGetShaderiv(vertexID, GL_COMPILE_STATUS, &ret);
+	if (ret != GL_TRUE) {
+		printf("Failed to compile fragment shader!\n");
+	}
+
+	program = glCreateProgram();
+	glAttachShader(program, vertexID);
+	glAttachShader(program, fragmentID);
+	glLinkProgram(program);
+	glUseProgram(program);
+}
+
+void GameEngine::LoadModelVAO(void)
+{
+	/* Set up our VAO */
+	glGenVertexArrays(1, &model.vao); 
+	glBindVertexArray(model.vao);
+
+	/* Set up our VBOs and load the model(s) */
+	glGenBuffers(1, &model.vbvert);
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbvert);  
+	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(struct Vector3D), &model.vertices[0], GL_STATIC_DRAW);
+ 
+	glGenBuffers(1, &model.vbnorm);
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbnorm);
+	glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(struct Vector3D), &model.normals[0], GL_STATIC_DRAW);
+
+	/* Set up the pointer for each VBO */
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbvert);
+	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, model.vbnorm);
+	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+	/* Disable the VAO and VBO */
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glBindVertexArray(0);
 }
 
 /* Load our model and set up the main GL parameters */
@@ -51,58 +131,8 @@ bool GameEngine::InitializeGL(void)
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
 
-	/* Setup light attributes */
-	GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 0.4f };
-	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, .8f };
-	GLfloat specularLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	GLfloat position[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	LoadModelVAO();
 
-	/* Setup light attributes */
-	GLfloat ambientLight1[] = { 0.2f, 0.2f, 0.2f, 0.3f };
-	GLfloat diffuseLight1[] = { 0.8f, 0.8f, 0.8, 0.7f };
-	GLfloat specularLight1[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	GLfloat position1[] = { 0.0f, 1.0f, -1.0f, 1.0f };
-
-	/* Apply attributes to lights */
-	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
-	glLightfv(GL_LIGHT0, GL_POSITION, position);
-
-	glLightfv(GL_LIGHT1, GL_AMBIENT, ambientLight1);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuseLight1);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, specularLight1);
-	glLightfv(GL_LIGHT1, GL_POSITION, position1);
-
-	/* Enable all the lights we want to use */
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
-	glEnable(GL_LIGHT1);
-
-	/* Set up our VAO */
-	glGenVertexArrays(1, &model.vao); 
-	glBindVertexArray(model.vao);
-
-	/* Set up our VBOs and load the model(s) */
-	glGenBuffers(1, &model.vbvert);
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbvert);  
-	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(struct Vector3D), &model.vertices[0], GL_STATIC_DRAW);
- 
-	glGenBuffers(1, &model.vbnorm);
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbnorm);
-	glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(struct Vector3D), &model.normals[0], GL_STATIC_DRAW);
-
-	/* Set up the pointer for each VBO */
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbvert);
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbnorm);
-	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	/* Disable the VAO and VBO */
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glBindVertexArray(0);
-  	
 	/* Gives us pretty calculations for perspective */
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
@@ -188,8 +218,8 @@ void GameEngine::Render(SDL_Window *window)
 
 bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 {
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 //	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 //      SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
@@ -277,6 +307,13 @@ int main(int argc, char *argv[])
 		std::cerr << "SDL initialization failed: %s\n" << SDL_GetError() << std::endl;;
 		exit(EXIT_FAILURE);
 	}
+
+	InitializeShaders();	
+
+	/* Test passing data to shader */
+	int loc = glGetUniformLocation(program, "color");
+	glProgramUniform4fv(program, loc, 1, vcolor);
+
 	if (GameEngine::GetEngine()->InitializeGL() == false) {
 		std::cerr << "Could not initialize OpenGL" << std::endl;
 		GameEngine::GetEngine()->QuitProgram();

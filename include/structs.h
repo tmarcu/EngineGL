@@ -1,6 +1,6 @@
 /*
  * EngineGL
- * Copyright (C) 2013 Tudor Marcu. All rights reserved.
+ * Copyright (C) 2015 Tudor Marcu. All rights reserved.
  */
 
 #ifndef STRUCTS_H
