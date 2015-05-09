@@ -1,6 +1,6 @@
 /*
  * EngineGL
- * Copyright (C) 2013 Tudor Marcu. All rights reserved.
+ * Copyright (C) 2015 Tudor Marcu. All rights reserved.
  */
 
 #ifndef MODEL_H
@@ -23,9 +23,10 @@ public:
 	std::vector<unsigned int> vertindices;
 	std::vector<unsigned int> uvindices;
 	std::vector<unsigned int> normindices;
-	GLuint vao;
-	GLuint vbvert;
-	GLuint vbnorm;
+	unsigned int vao;
+	unsigned int vbvert;
+	unsigned int vbnorm;
+	bool isfilled;
 	Model();
 
 	~Model();

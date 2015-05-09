@@ -95,22 +95,26 @@ void Camera::MoveCamera(int direction)
 		position.x += center.x*movespeed;
 		position.y += center.y*movespeed;
 		position.z += center.z*movespeed;
+		Normalize(position);
 		break;
 	/* MOVE BACKWARD, subtract the look vector from the position */
 	case DOWN:
 		position.x -= center.x*movespeed;
 		position.y -= center.y*movespeed;
 		position.z -= center.z*movespeed;
+		Normalize(position);
 		break;
 	/* MOVE LEFT,  add the z look vector to the x pos, and then subtract the x vector from the z pos */
 	case LEFT:
 		position.x +=  center.z*movespeed;
 		position.z -=  center.x*movespeed;
+		Normalize(position);
 		break;
 	/* MOVE RIGHT, subtract the z look vector from the x pos, and then add the x vector to the z pos */
 	case RIGHT:
 		position.x -=  center.z*movespeed;
 		position.z +=  center.x*movespeed;
+		Normalize(position);
 		break;
 	}
 

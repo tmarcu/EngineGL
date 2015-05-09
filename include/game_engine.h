@@ -43,6 +43,10 @@ public:
 	bool IsRunning() { return isrunning;};
 	void  SetActive(bool a) { isactive = a;};
 	void SetRunning(bool r) { isrunning = r;};
+	void SetModel(Model *model) { model_ = model;};
+	Model *GetModel(void) { return model_;};
+	void SetShader(unsigned int program) { shaderprogram_ = program;};
+	unsigned int GetShader(void) { return shaderprogram_;};
 
 	SDL_Window *GetWindow(void) { return window_;};
 	void SetGLContext(SDL_GLContext *context);
@@ -50,9 +54,9 @@ public:
 
 	bool SetupSDL(const int screen_width, const int screen_height);
 	bool InitializeGL(void);		/* Set up all of the openGL needed */
-	void LoadModelVAO(void);	/* Load and store the model in the OpenGL buffer */
+	void LoadModelVAO(Model *model);	/* Load and store the model in the OpenGL buffer */
 	void QuitProgram(void);		/* Free appropriate memory */
-	void Render(SDL_Window *window);			/* Render the scene after all drawing done */
+	void Render(SDL_Window *window, Model *model);			/* Render the scene after all drawing done */
 	void HandleEvent(SDL_Event event);  /* Handle incoming events */
 	void HandleKeystate(void);		/* Handle multiple keypresses */
 	void CameraLook(void);		/* Equivalent of gluLookAt*/
@@ -64,10 +68,12 @@ private:
 	int screen_width_;
 	int screen_height_;
 	int screen_bpp_;
+	unsigned int shaderprogram_;
 	const Uint8 *keystate_;
 	SDL_Window *window_;
 	SDL_GLContext glcontext_;
 	Camera *camera_;
+	Model *model_;
 
 	static Vector3D camera_position_;
 	static Vector3D camera_center_;

@@ -15,7 +15,7 @@ using std::string;
 
 Model::Model()
 {
-
+	isfilled = true;
 }
 
 Model::~Model()

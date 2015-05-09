@@ -5,15 +5,25 @@
 
 #include <iostream>
 #include <fstream>
+
+#include <glm/glm.hpp>
+#include "glm/gtc/matrix_transform.hpp"
+#include <glm/gtc/type_ptr.hpp>
+
 #include "game_engine.h"
 
 #define DEBUG 1  /* Used for enabling verbose output to test program */
 
-float vcolor[4] = {0.0, 1.0, 0.0, 1.0};
+#define BUFFER_OFFSET(offset) ((GLvoid*) (offset))
 
 GameEngine *GameEngine::game_engine = NULL;
-Model model;
-unsigned int program;
+glm::mat4 modelmatrix;
+glm::mat4 view;
+glm::mat4 modelview;
+glm::mat4 projection;
+unsigned int modelmatrixid;
+unsigned int viewmatrixid;
+unsigned int projectionmatrixid;
 
 /* Constructors and destructors */
 GameEngine::GameEngine(int screen_width, int screen_height, int screen_bpp)
@@ -48,6 +58,7 @@ static void InitializeShaders(void)
 	const char *shader[1];
 	unsigned int vertexID;
 	unsigned int fragmentID;
+	unsigned int program;
 	int ret;
 	std::string shaderfile;
 
@@ -66,46 +77,56 @@ static void InitializeShaders(void)
 	glGetShaderiv(vertexID, GL_COMPILE_STATUS, &ret);
 	if (ret != GL_TRUE) {
 		printf("Failed to compile vertex shader!\n");
+		GLchar InfoLog[1024];
+		glGetShaderInfoLog(vertexID, sizeof(InfoLog), NULL, InfoLog);
+		fprintf(stderr, "Error compiling shader type %d: '%s'\n", GL_VERTEX_SHADER, InfoLog);
 	}
 
 	glCompileShader(fragmentID);
 	glGetShaderiv(vertexID, GL_COMPILE_STATUS, &ret);
 	if (ret != GL_TRUE) {
 		printf("Failed to compile fragment shader!\n");
+		GLchar InfoLog[1024];
+		glGetShaderInfoLog(fragmentID, sizeof(InfoLog), NULL, InfoLog);
+		fprintf(stderr, "Error compiling shader type %d: '%s'\n", GL_FRAGMENT_SHADER, InfoLog);
 	}
 
 	program = glCreateProgram();
+	GameEngine::GetEngine()->SetShader(program);
+
 	glAttachShader(program, vertexID);
 	glAttachShader(program, fragmentID);
 	glLinkProgram(program);
 	glUseProgram(program);
 }
 
-void GameEngine::LoadModelVAO(void)
+void GameEngine::LoadModelVAO(Model *model)
 {
+	unsigned int buffer;
+	unsigned int vPosition;
+	unsigned int vNormal;
+	int totalvertices;
+
 	/* Set up our VAO */
-	glGenVertexArrays(1, &model.vao); 
-	glBindVertexArray(model.vao);
+	glGenVertexArrays(1, &model->vao);
+	glBindVertexArray(model->vao);
 
-	/* Set up our VBOs and load the model(s) */
-	glGenBuffers(1, &model.vbvert);
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbvert);  
-	glBufferData(GL_ARRAY_BUFFER, model.vertices.size() * sizeof(struct Vector3D), &model.vertices[0], GL_STATIC_DRAW);
- 
-	glGenBuffers(1, &model.vbnorm);
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbnorm);
-	glBufferData(GL_ARRAY_BUFFER, model.normals.size() * sizeof(struct Vector3D), &model.normals[0], GL_STATIC_DRAW);
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
-	/* Set up the pointer for each VBO */
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbvert);
-	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, model.vbnorm);
-	glVertexAttribPointer((GLuint)1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	totalvertices = model->vertices.size() + model->normals.size();
+    glBufferData(GL_ARRAY_BUFFER, totalvertices*  sizeof(struct Vector3D), NULL, GL_STATIC_DRAW);
 
-	/* Disable the VAO and VBO */
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glBindVertexArray(0);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, model->vertices.size() * sizeof(struct Vector3D), &model->vertices[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, model->vertices.size() * sizeof(struct Vector3D), model->normals.size() * sizeof(struct Vector3D), &model->normals[0]);
+
+	vPosition = glGetAttribLocation(GameEngine::GetEngine()->GetShader(), "vPosition");
+	glEnableVertexAttribArray(vPosition);
+	glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+
+	vNormal = glGetAttribLocation(GameEngine::GetEngine()->GetShader(), "vNormal");
+	glEnableVertexAttribArray(vNormal);
+	glVertexAttribPointer(vNormal, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(model->vertices.size() * sizeof(struct Vector3D)));
 }
 
 /* Load our model and set up the main GL parameters */
@@ -113,16 +134,30 @@ bool GameEngine::InitializeGL(void)
 {
 	/* What we use to initialize the camera */
 	Vector3D camera_position_ = {0.0f, 0.0f, 1.0f};
-	Vector3D camera_center_ = {0.0f, 0.0f, 1.0f};
+	Vector3D camera_center_ = {0.0f, 0.0f, -1.0f};
 	Vector3D camera_up_ = {0.0f, 1.0f, 0.0f};
-
+	unsigned int shaderprogram = GameEngine::GetEngine()->GetShader();
+	unsigned int modelmatrixid = glGetUniformLocation(shaderprogram, "modelmatrix");
+	unsigned int viewmatrixid = glGetUniformLocation(shaderprogram, "viewmatrix");
+	unsigned int projectionmatrixid = glGetUniformLocation(shaderprogram, "projectmatrix");
 	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 1.0f);
+
+	modelmatrix = glm::mat4();
+	view = glm::lookAt(
+					    glm::vec3(camera_position_.x, camera_position_.y, camera_position_.z),
+					    glm::vec3(camera_center_.x, camera_center_.y, camera_center_.z),
+					    glm::vec3(camera_up_.x, camera_up_.y, camera_up_.z));
+	projection = glm::perspective(45.0f, (float) SCREEN_WIDTH/ (float) SCREEN_HEIGHT, 0.1f, 10000.0f);
+
+    glUniformMatrix4fv(modelmatrixid, 1, GL_FALSE, &modelmatrix[0][0]);
+    glUniformMatrix4fv(viewmatrixid, 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv(projectionmatrixid, 1, GL_FALSE, &projection[0][0]);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
 
-	/* Set the background black */
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	/* Set the background white */
+	glClearColor(0.0f, 0.0f, 0.3f, 0.0f);
 
 	/* Set up depth buffer */
 	glClearDepth(1.0f);
@@ -130,8 +165,6 @@ bool GameEngine::InitializeGL(void)
 
 	/* Which depth test we should use */
 	glDepthFunc(GL_LEQUAL);
-
-	LoadModelVAO();
 
 	/* Gives us pretty calculations for perspective */
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
@@ -167,13 +200,18 @@ void GameEngine::ResizeWindow(int width, int height)
 /* Set gluLookAt dynamically to what the camera coordinates/vectors are */
 void GameEngine::CameraLook(void)
 {
-	gluLookAt(camera_->GetCameraPosition().x,
+	/*gluLookAt(camera_->GetCameraPosition().x,
 		  camera_->GetCameraPosition().y,
 		  camera_->GetCameraPosition().z,
 		  camera_->GetCameraPosition().x + camera_->GetCameraCenter().x, 
 		  camera_->GetCameraPosition().y + camera_->GetCameraCenter().y, 
 		  camera_->GetCameraPosition().z + camera_->GetCameraCenter().z,
 		  0, 1, 0);
+	*/
+	view = glm::lookAt(
+				glm::vec3(camera_->GetCameraPosition().x, camera_->GetCameraPosition().y, camera_->GetCameraPosition().z),
+				glm::vec3(camera_->GetCameraPosition().x + camera_->GetCameraCenter().x, camera_->GetCameraPosition().y + camera_->GetCameraCenter().y, camera_->GetCameraPosition().z + camera_->GetCameraCenter().z),
+				glm::vec3(0.0, 1.0, 0.0));
 }
 
 /* Handle the keystates so that we can do multiple keypresses */
@@ -192,25 +230,27 @@ void GameEngine::HandleKeystate(void)
 }
 
 /* Drawing code */
-void GameEngine::Render(SDL_Window *window)
+void GameEngine::Render(SDL_Window *window, Model *model)
 {
+	glViewport(0, 0, SCREEN_HEIGHT, SCREEN_WIDTH);
 	/* Clear The Screen And The Depth Buffer*/
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	unsigned int shaderprogram = GameEngine::GetEngine()->GetShader();
+	float matrix[16];
 
-	/* Change to model matrix */
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity(); /* Reset the current modelview matrix */
 	GameEngine::GetEngine()->CameraLook(); /* Where gluLookAt(...) would normally appear */
+	modelmatrix = glm::mat4(1.0f);
+	modelview = view * modelmatrix;
+
+	modelmatrixid = glGetUniformLocation(shaderprogram, "modelviewmatrix");
+	viewmatrixid = glGetUniformLocation(shaderprogram, "viewmatrix");
+	projectionmatrixid = glGetUniformLocation(shaderprogram, "projectionmatrix");
+    glUniformMatrix4fv(modelmatrixid, 1, GL_FALSE, &modelview[0][0]);
+    glUniformMatrix4fv(viewmatrixid, 1, GL_FALSE, &view[0][0]);
+    glUniformMatrix4fv(projectionmatrixid, 1, GL_FALSE, &projection[0][0]);
 
 	/* Draw whatever is specified for the program */
 	RenderGame();
-
-	/* Bind our VAO before we can use it */
-	glBindVertexArray(model.vao);
-
-	glDrawArrays(GL_TRIANGLES, 0, model.vertices.size());
-
-	glBindVertexArray(0);
 
 	/* Actually draw everything to the screen */
 	SDL_GL_SwapWindow(window);
@@ -220,8 +260,8 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-//	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-//      SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+	//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	/* Initialize SDL */
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
@@ -243,8 +283,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetSwapInterval(1); // 0 = vsync off
 
-	/* This is not needed for me... but lower opengl versions may need it */
-//	glewExperimental = GL_TRUE;
+	glewExperimental = GL_TRUE;
 	GLuint glewerr = glewInit();
 	if ( glewerr != GLEW_OK )
 	{
@@ -260,8 +299,10 @@ void GameEngine::HandleEvent(SDL_Event event)
 {
 	switch(event.type) {
 	case SDL_WINDOWEVENT_SIZE_CHANGED:
+		/*
 		std::cerr << "WINDOW RESIZE" << std::endl;
 		ResizeWindow(event.window.data1, event.window.data2);
+		*/
 		break;
 	case SDL_KEYDOWN:
 		HandleKeyPress(&event.key.keysym);
@@ -294,8 +335,8 @@ int main(int argc, char *argv[])
 		std::cerr << "ERROR: Please specify a model!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
-	model.loadmodel(argv[1]);	
+	Model *model = new Model();
+	model->loadmodel(argv[1]);
 
 	/* Only run the program if we successfully create the game engine */
 	if (InitializeGame() != true) {
@@ -308,16 +349,17 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	InitializeShaders();	
+	GameEngine::GetEngine()->SetModel(model);
 
-	/* Test passing data to shader */
-	int loc = glGetUniformLocation(program, "color");
-	glProgramUniform4fv(program, loc, 1, vcolor);
+	InitializeShaders();
 
 	if (GameEngine::GetEngine()->InitializeGL() == false) {
 		std::cerr << "Could not initialize OpenGL" << std::endl;
 		GameEngine::GetEngine()->QuitProgram();
 	}
+
+	GameEngine::GetEngine()->LoadModelVAO(GameEngine::GetEngine()->GetModel());
+
 
 	GameEngine::GetEngine()->SetRunning(true);
 	GameEngine::GetEngine()->SetActive(true);
@@ -349,7 +391,7 @@ int main(int argc, char *argv[])
 		/* Draw scene */
 		if (GameEngine::GetEngine()->IsActive()) {
 			SDL_WarpMouseInWindow(window, SCREEN_HALF_WIDTH, SCREEN_HALF_HEIGHT);
-			GameEngine::GetEngine()->Render(window);
+			GameEngine::GetEngine()->Render(window, GameEngine::GetEngine()->GetModel());
 		}
 	}
 	/* Properly release everything and exit */

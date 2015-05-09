@@ -25,11 +25,22 @@ void MouseButtonDown(int x, int y, int button) {};
 
 void RenderGame()
 {
+	Model *model = g_game->GetModel();
+
+	/* Bind our VAO before we can use it */
+	glBindVertexArray(model->vao);
+
+	glDrawArrays(GL_TRIANGLES, 0, model->vertices.size());
+
+	glBindVertexArray(0);
+
 }
 
 /* function to handle key press events */
 void HandleKeyPress(SDL_Keysym *keysym)
 {
+	int loc;
+
 	switch (keysym->sym) {
 	case SDLK_ESCAPE:
 		g_game->QuitProgram();
@@ -39,15 +50,28 @@ void HandleKeyPress(SDL_Keysym *keysym)
 		//g_game->set_surface(SDL_SetVideoMode(1280, 800, SCREEN_BPP, SDL_FULLSCREEN));
 		break;
 	case SDLK_RIGHTBRACKET: /* Increase camera speed */
-		g_game->GetCamera()->SetLookSpeed(0.05f);
+		g_game->GetCamera()->SetMoveSpeed(g_game->GetCamera()->GetMoveSpeed() + 0.01f);
 		break;
 	case SDLK_LEFTBRACKET: /* Decrease camera speed only if it is greater than the minimum */
-		if (g_game->GetCamera()->GetLookSpeed() >= 0.05f)
-			g_game->GetCamera()->SetLookSpeed(g_game->GetCamera()->GetLookSpeed()- 0.01f);
+		if (g_game->GetCamera()->GetMoveSpeed() >= 0.01f)
+			g_game->GetCamera()->SetMoveSpeed(g_game->GetCamera()->GetMoveSpeed()- 0.01f);
 		break;
 	case SDLK_F2:
 		g_game->GetCamera()->SetCameraPosition(0.0f, 0.0f, 1.0f);
 		g_game->GetCamera()->SetCameraCenter(0.0f, 0.0f, -1.0f);
+		break;
+	case SDLK_f:
+		if (g_game->GetModel()->isfilled == true) {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			g_game->GetModel()->isfilled = false;
+		} else {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			g_game->GetModel()->isfilled = true;
+		}
+		break;
+	case SDLK_1:
+		loc = glGetUniformLocation(GameEngine::GetEngine()->GetShader(), "xscale");
+		glProgramUniform4f(GameEngine::GetEngine()->GetShader(), loc, 3.0, 1.0, 1.0, 1.0);
 		break;
 	default:
 		break;

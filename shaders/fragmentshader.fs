@@ -1,6 +1,13 @@
-uniform vec4 color;
+#version 430
 
-void main()
+layout(location = 0) out vec4 fragcolor;
+
+in vec3 N;
+in vec3 v;
+in vec4 vcolor;
+
+void main(void)
 {
-	gl_FragColor= color; 
+
+	fragcolor = vcolor;
 }
