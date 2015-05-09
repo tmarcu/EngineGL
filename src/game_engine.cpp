@@ -24,6 +24,7 @@ glm::mat4 projection;
 unsigned int modelmatrixid;
 unsigned int viewmatrixid;
 unsigned int projectionmatrixid;
+unsigned int shaderprogram;
 
 /* Constructors and destructors */
 GameEngine::GameEngine(int screen_width, int screen_height, int screen_bpp)
@@ -115,10 +116,10 @@ void GameEngine::LoadModelVAO(Model *model)
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
 	totalvertices = model->vertices.size() + model->normals.size();
-    glBufferData(GL_ARRAY_BUFFER, totalvertices*  sizeof(struct Vector3D), NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, totalvertices*  sizeof(struct Vector3D), NULL, GL_STATIC_DRAW);
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, model->vertices.size() * sizeof(struct Vector3D), &model->vertices[0]);
-    glBufferSubData(GL_ARRAY_BUFFER, model->vertices.size() * sizeof(struct Vector3D), model->normals.size() * sizeof(struct Vector3D), &model->normals[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, model->vertices.size() * sizeof(struct Vector3D), model->normals.size() * sizeof(struct Vector3D), &model->normals[0]);
 
 	vPosition = glGetAttribLocation(GameEngine::GetEngine()->GetShader(), "vPosition");
 	glEnableVertexAttribArray(vPosition);
@@ -149,9 +150,9 @@ bool GameEngine::InitializeGL(void)
 					    glm::vec3(camera_up_.x, camera_up_.y, camera_up_.z));
 	projection = glm::perspective(45.0f, (float) SCREEN_WIDTH/ (float) SCREEN_HEIGHT, 0.1f, 10000.0f);
 
-    glUniformMatrix4fv(modelmatrixid, 1, GL_FALSE, &modelmatrix[0][0]);
-    glUniformMatrix4fv(viewmatrixid, 1, GL_FALSE, &view[0][0]);
-    glUniformMatrix4fv(projectionmatrixid, 1, GL_FALSE, &projection[0][0]);
+	glUniformMatrix4fv(modelmatrixid, 1, GL_FALSE, &modelmatrix[0][0]);
+	glUniformMatrix4fv(viewmatrixid, 1, GL_FALSE, &view[0][0]);
+	glUniformMatrix4fv(projectionmatrixid, 1, GL_FALSE, &projection[0][0]);
 
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
@@ -235,8 +236,6 @@ void GameEngine::Render(SDL_Window *window, Model *model)
 	glViewport(0, 0, SCREEN_HEIGHT, SCREEN_WIDTH);
 	/* Clear The Screen And The Depth Buffer*/
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	unsigned int shaderprogram = GameEngine::GetEngine()->GetShader();
-	float matrix[16];
 
 	GameEngine::GetEngine()->CameraLook(); /* Where gluLookAt(...) would normally appear */
 	modelmatrix = glm::mat4(1.0f);
@@ -245,9 +244,9 @@ void GameEngine::Render(SDL_Window *window, Model *model)
 	modelmatrixid = glGetUniformLocation(shaderprogram, "modelviewmatrix");
 	viewmatrixid = glGetUniformLocation(shaderprogram, "viewmatrix");
 	projectionmatrixid = glGetUniformLocation(shaderprogram, "projectionmatrix");
-    glUniformMatrix4fv(modelmatrixid, 1, GL_FALSE, &modelview[0][0]);
-    glUniformMatrix4fv(viewmatrixid, 1, GL_FALSE, &view[0][0]);
-    glUniformMatrix4fv(projectionmatrixid, 1, GL_FALSE, &projection[0][0]);
+	glUniformMatrix4fv(modelmatrixid, 1, GL_FALSE, &modelview[0][0]);
+	glUniformMatrix4fv(viewmatrixid, 1, GL_FALSE, &view[0][0]);
+	glUniformMatrix4fv(projectionmatrixid, 1, GL_FALSE, &projection[0][0]);
 
 	/* Draw whatever is specified for the program */
 	RenderGame();
@@ -261,7 +260,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
 	/* Initialize SDL */
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
