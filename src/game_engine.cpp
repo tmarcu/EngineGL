@@ -144,7 +144,7 @@ bool GameEngine::InitializeGL(void)
 	unsigned int projectionmatrixid = glGetUniformLocation(shaderprogram, "projectmatrix");
 	camera_ = new Camera(camera_position_, camera_center_, camera_up_, 0.01f, 1.0f);
 
-	modelmatrix = glm::mat4();
+	modelmatrix = glm::mat4(1.0f);
 	view = glm::lookAt(
 					    glm::vec3(camera_position_.x, camera_position_.y, camera_position_.z),
 					    glm::vec3(camera_center_.x, camera_center_.y, camera_center_.z),
@@ -234,7 +234,7 @@ void GameEngine::HandleKeystate(void)
 /* Drawing code */
 void GameEngine::Render(SDL_Window *window, Model *model)
 {
-	glViewport(0, 0, SCREEN_HEIGHT, SCREEN_WIDTH);
+	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	/* Clear The Screen And The Depth Buffer*/
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
