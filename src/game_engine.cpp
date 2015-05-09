@@ -94,6 +94,7 @@ static void InitializeShaders(void)
 
 	program = glCreateProgram();
 	GameEngine::GetEngine()->SetShader(program);
+	shaderprogram = GameEngine::GetEngine()->GetShader();
 
 	glAttachShader(program, vertexID);
 	glAttachShader(program, fragmentID);

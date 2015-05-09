@@ -8,6 +8,5 @@ in vec4 vcolor;
 
 void main(void)
 {
-
 	fragcolor = vcolor;
 }
