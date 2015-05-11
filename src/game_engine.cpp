@@ -14,16 +14,19 @@
 
 #define DEBUG 1  /* Used for enabling verbose output to test program */
 
-#define BUFFER_OFFSET(offset) ((GLvoid*) (offset))
+#define BUFFER_OFFSET(offset) ((void *) (offset))
 
 GameEngine *GameEngine::game_engine = NULL;
 glm::mat4 modelmatrix;
 glm::mat4 view;
 glm::mat4 modelview;
 glm::mat4 projection;
+glm::mat4 normalmatrix;
+
 unsigned int modelmatrixid;
 unsigned int viewmatrixid;
 unsigned int projectionmatrixid;
+unsigned int normalmatrixid;
 unsigned int shaderprogram;
 
 /* Constructors and destructors */
@@ -158,8 +161,10 @@ bool GameEngine::InitializeGL(void)
 	/* Enable smooth shading in our program */
 	glShadeModel(GL_SMOOTH);
 
-	/* Set the background white */
+	/* Set the background color */
 	glClearColor(0.0f, 0.0f, 0.3f, 0.0f);
+
+	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
 	/* Set up depth buffer */
 	glClearDepth(1.0f);
@@ -234,20 +239,23 @@ void GameEngine::HandleKeystate(void)
 /* Drawing code */
 void GameEngine::Render(SDL_Window *window, Model *model)
 {
-	glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	/* Clear The Screen And The Depth Buffer*/
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	GameEngine::GetEngine()->CameraLook(); /* Where gluLookAt(...) would normally appear */
 	modelmatrix = glm::mat4(1.0f);
 	modelview = view * modelmatrix;
+	normalmatrix = glm::transpose(glm::inverse(modelview));
 
 	modelmatrixid = glGetUniformLocation(shaderprogram, "modelviewmatrix");
 	viewmatrixid = glGetUniformLocation(shaderprogram, "viewmatrix");
 	projectionmatrixid = glGetUniformLocation(shaderprogram, "projectionmatrix");
+	normalmatrixid = glGetUniformLocation(shaderprogram, "normalmatrix");
+
 	glUniformMatrix4fv(modelmatrixid, 1, GL_FALSE, &modelview[0][0]);
 	glUniformMatrix4fv(viewmatrixid, 1, GL_FALSE, &view[0][0]);
 	glUniformMatrix4fv(projectionmatrixid, 1, GL_FALSE, &projection[0][0]);
+	glUniformMatrix4fv(normalmatrixid, 1, GL_FALSE, &normalmatrix[0][0]);
 
 	/* Draw whatever is specified for the program */
 	RenderGame();
