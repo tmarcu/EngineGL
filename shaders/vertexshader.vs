@@ -19,7 +19,7 @@ void main(void)
 	gl_Position = projectionmatrix * modelviewmatrix * vec4(vPosition, 1.0);
 
 	lightpos = -(modelviewmatrix * vec4(lightsource, 1.0)).xyz;
-	vnorm = normalize(normalmatrix * vec4(vNormal, 1.0)).xyz;
+	vnorm = (normalmatrix * vec4(vNormal, 1.0)).xyz;
 
 	vcolor = vec4(1.0, 1.0, 1.0, 1.0);
 }

@@ -10,5 +10,5 @@ void main(void)
 {
 	vec4 diffuse = vec4(max(dot(vnorm, normalize(lightpos)), 0.0));
 
-	fragcolor = vcolor * diffuse;
+	fragcolor = diffuse * normalize(vcolor);
 }
