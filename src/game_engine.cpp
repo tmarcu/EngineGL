@@ -193,15 +193,7 @@ void GameEngine::QuitProgram(void)
 /* function to reset our viewport after a window resize */
 void GameEngine::ResizeWindow(int width, int height)
 {
-	glViewport(0, 0, width, height);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	/* Calculate The Aspect Ratio And Set The Clipping Volume */
-	if (height == 0)
-		height = 1;
-	gluPerspective(45.0f, (float)width/height, 0.1, 10000.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	SDL_SetWindowSize(window_, width, height);
 }
 
 /* Set gluLookAt dynamically to what the camera coordinates/vectors are */
@@ -268,8 +260,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	//SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
 
 	/* Initialize SDL */
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
@@ -277,7 +268,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 		return false;
 	}
 
-	window_ = SDL_CreateWindow("SDLPROG", SDL_WINDOWPOS_CENTERED,
+	window_ = SDL_CreateWindow("EngineGL by tmarcu", SDL_WINDOWPOS_CENTERED,
 					SDL_WINDOWPOS_CENTERED,
 					screen_width, screen_height,
 					SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
@@ -291,7 +282,7 @@ bool GameEngine::SetupSDL(const int screen_width, const int screen_height)
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetSwapInterval(1); // 0 = vsync off
 
-	glewExperimental = GL_TRUE;
+	glewExperimental = GL_FALSE;
 	GLuint glewerr = glewInit();
 	if ( glewerr != GLEW_OK )
 	{
@@ -352,7 +343,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (GameEngine::GetEngine()->SetupSDL(1024, 768) != true) {
+	if (GameEngine::GetEngine()->SetupSDL(SCREEN_WIDTH, SCREEN_HEIGHT) != true) {
 		std::cerr << "SDL initialization failed: %s\n" << SDL_GetError() << std::endl;;
 		exit(EXIT_FAILURE);
 	}

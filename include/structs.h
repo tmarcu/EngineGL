@@ -7,11 +7,11 @@
 #define STRUCTS_H
 
 /* Screen data we want to incorporate */
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 800
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 1080
 #define SCREEN_HALF_WIDTH SCREEN_WIDTH/2
 #define SCREEN_HALF_HEIGHT SCREEN_HEIGHT/2
-#define SCREEN_BPP     32
+#define SCREEN_BPP 32
 
 struct Vector3D {
 	float x, y, z;

@@ -39,15 +39,16 @@ void RenderGame()
 /* function to handle key press events */
 void HandleKeyPress(SDL_Keysym *keysym)
 {
-	int loc;
+	unsigned int loc;
+	unsigned int flags;
 
 	switch (keysym->sym) {
 	case SDLK_ESCAPE:
 		g_game->QuitProgram();
 		break;
 	case SDLK_F1:
-		//SDL_WM_ToggleFullScreen(g_game->get_surface()); /* ONLY works on X11 */
-		//g_game->set_surface(SDL_SetVideoMode(1280, 800, SCREEN_BPP, SDL_FULLSCREEN));
+		flags = SDL_GetWindowFlags(g_game->GetWindow()) ^ SDL_WINDOW_FULLSCREEN_DESKTOP;
+		SDL_SetWindowFullscreen(g_game->GetWindow(), flags);
 		break;
 	case SDLK_RIGHTBRACKET: /* Increase camera speed */
 		g_game->GetCamera()->SetMoveSpeed(g_game->GetCamera()->GetMoveSpeed() + 0.01f);

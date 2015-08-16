@@ -9,6 +9,7 @@
 #include "model.h"
 
 using std::cout;
+using std::cerr;
 using std::endl;
 using std::vector;
 using std::string;
@@ -25,7 +26,7 @@ Model::~Model()
 
 static void exerr(string msg)
 {
-	cout << msg << endl;
+	cerr << msg << endl;
 }
 
 void Model::getvertex(char *str, vector<struct Vector3D> *vertex)
