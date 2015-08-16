@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall -g
+CFLAGS=-c -Wall -O3 -march=corei7-avx
 LDFLAGS= -lGLEW -lGL -lGLU -lSDL2
 INCLUDES=$(CUR_DIR)include/
 
